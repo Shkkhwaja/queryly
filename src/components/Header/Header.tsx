@@ -7,12 +7,13 @@ import { CiViewList } from "react-icons/ci";
 import { FaRegPenToSquare } from "react-icons/fa6";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
-import { Avatar } from "antd";
+import { Avatar, Dropdown } from "antd";
 import { Form, Input } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import "../../app/globals.css";
 import img from "../../../public/Images/man-avatar.webp";
+import { IoIosAddCircleOutline } from "react-icons/io";
 
 const Header: React.FC = () => {
   const [searchText, setSearchText] = useState<string>("");
@@ -91,8 +92,8 @@ const Header: React.FC = () => {
   return (
     <>
       <nav>
-        <div className="h-[3.5em] w-full bg-white shadow-md relative dark:bg-gray-800">
-          <h2 className="text-[32px] ml-[4em] py-1 text-red-600 font-mono">
+        <div className="h-[3.5em] w-full bg-white shadow-md relative dark:bg-gray-800 hidden md:block">
+          <h2 className="text-[32px] md:ml-[4em] py-1 text-red-600 font-mono">
             QueryHub
           </h2>
 
@@ -124,7 +125,7 @@ const Header: React.FC = () => {
           </ul>
 
           {/* Search Bar */}
-          <div className="absolute left-[36em] top-4 transform z-0 -translate-y-1/2">
+          <div className="absolute left-[36em] top-7 transform z-0 -translate-y-1/2 hidden md:block ">
             <Form onFinish={handleSearch} layout="inline">
               <Form.Item
                 name="search"
@@ -132,17 +133,20 @@ const Header: React.FC = () => {
                   { required: true, message: "Please enter your search text" },
                 ]}
               >
-                <CiSearch
-                  size={25}
-                  className="relative top-7 z-10 left-[17em] text-gray-500 dark:text-white"
-                />
-                <Input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  className="w-[20em] border-gray-500 rounded-sm dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <CiSearch
+                    size={25}
+                    className="absolute top-1 left-[17em] z-10 text-gray-500 dark:text-white"
+                  />
+                  <Input
+                    name="search"
+                    type="text"
+                    placeholder="Search..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    className="w-[20em] border-gray-500 rounded-sm dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
               </Form.Item>
             </Form>
           </div>
@@ -165,7 +169,7 @@ const Header: React.FC = () => {
                   />
                 }
               />
-              {isAvatarHovered && (
+              {/* {isAvatarHovered && (
                 <ul className="absolute top-[30px] right-0 bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
                   {profileMenuItems.map((item) => (
                     <li
@@ -176,13 +180,21 @@ const Header: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              )}
+              )} */}
             </div>
           </div>
 
           {/* Add Question Button */}
           <div className="absolute top-3 right-[15em]">
-            <div className="h-8 w-[9.5em] bg-red-500 rounded-[50px] align-middle border-1 border-black flex items-center justify-center relative">
+            <Dropdown.Button
+              icon={<DownOutlined />}
+              menu={{ items: buttonMenuItems }}
+              className="bg-[rgba(221,49,49,0.36)] hover:bg-[rgba(221,49,49,0.2)] text-white "
+            >
+              Add Question
+            </Dropdown.Button>
+
+            {/* <div className="h-8 w-[9.5em] bg-red-500 rounded-[50px] align-middle border-1 border-black flex items-center justify-center relative">
               <button className="text-white text-[15px] -tracking-tighter font-mono flex items-center">
                 Add Question
               </button>
@@ -191,21 +203,21 @@ const Header: React.FC = () => {
                 onMouseLeave={() => setIsButtonHovered(false)}
               >
                 <DownOutlined className="mx-1 cursor-pointer text-white hover:bg-red-400 p-1 rounded-lg" />
-              
-              {isButtonHovered && (
-                <ul className="absolute top-[29px] right-0 w-[8.5vw] bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                  {buttonMenuItems.map((item) => (
-                    <li
-                      key={item.key}
-                      className="py-1 px-3 text-gray-700 hover:bg-gray-100 cursor-pointer dark:text-white dark:hover:bg-gray-600"
-                    >
-                      {item.label}
-                    </li>
-                  ))}
-                </ul>
-              )}
+
+                {isButtonHovered && (
+                  <ul className="absolute top-[29px] right-0 w-[8.5vw] bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
+                    {buttonMenuItems.map((item) => (
+                      <li
+                        key={item.key}
+                        className="py-1 px-3 text-gray-700 hover:bg-gray-100 cursor-pointer dark:text-white dark:hover:bg-gray-600"
+                      >
+                        {item.label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Languge select icon */}
@@ -218,7 +230,7 @@ const Header: React.FC = () => {
                 size={30}
                 className="text-gray-500 cursor-pointer hover:text-red-600 dark:text-white"
               />
-              {isButtonTranslate && (
+              {/* {isButtonTranslate && (
                 <ul className="absolute top-[30px] right-0 w-auto bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
                   {translateMenuItems.map((item) => (
                     <li
@@ -229,19 +241,79 @@ const Header: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              )}
+              )} */}
             </div>
           </div>
 
           {/* Toggle Theme Button */}
           <button
-            className="absolute top-3 right-4 text-gray-600 dark:text-white border-2 px-1"
+            className="absolute top-3 right-4 text-gray-600 dark:text-white border-2 px-1 hidden md:block"
             onClick={toggleTheme}
           >
             {isDarkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
           </button>
         </div>
       </nav>
+
+      {/* Search Bar Responsive */}
+      <div className="md:hidden">
+        <div className=" h-[6vh] bg-red-600">
+          <div className="flex text-white gap-1 absolute top-2">
+        <CiSearch
+          size={25}
+        />
+        <h2 className="text-[15px]">Search</h2>
+        </div>
+
+        <h2 className="text-white text-center text-[20px] py-1 font-mono">Query Hub</h2>
+
+                <div className="text-white absolute top-2 right-2 flex gap-1">
+        <PlusCircleOutlined  
+        size={25}/>
+                <h2 className="text-[15px]">Add</h2>
+
+                </div>
+
+
+
+
+
+
+
+
+        {/* <div className="">
+            <IoIosAddCircleOutline />
+          </div>
+
+          <ul className="">
+            <li>
+              <MdHome
+                size={33}
+                className="text-gray-600 cursor-pointer hover:text-red-600 dark:text-white dark:hover:text-red-600"
+              />
+            </li>
+            <li>
+              <CiViewList
+                size={33}
+                className="text-gray-600 cursor-pointer hover:text-red-600 dark:text-white dark:hover:text-red-600"
+              />
+            </li>
+            <li>
+              <FaRegPenToSquare
+                size={30}
+                className="text-gray-500 cursor-pointer hover:text-red-600 dark:text-white dark:hover:text-red-600"
+              />
+            </li>
+            <li>
+              <IoMdNotificationsOutline
+                size={33}
+                className="text-gray-600 cursor-pointer hover:text-red-600 dark:text-white dark:hover:text-red-600"
+              />
+            </li>
+          </ul> */}
+
+</div>
+      </div>
     </>
   );
 };

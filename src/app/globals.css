@@ -21,3 +21,27 @@ body {
 }
 
 
+/* Ask Button Hover Fix */
+.ant-dropdown-button {
+  background-color: rgba(221, 49, 49, 0.966) !important; /* Override default styles */
+  border-radius: 5px !important; /* Add rounded corners */
+  transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+.ant-dropdown-button:hover {
+  background-color: rgba(221, 49, 49, 0.7) !important; /* Adjust hover background */
+}
+
+.ant-dropdown-button .ant-btn {
+  background-color: rgba(221, 49, 49, 0.966) !important; /* Override button background */
+  border: none !important; /* Remove border */
+  color: #fff !important; /* Ensure text color is white */
+}
+
+.ant-dropdown-button:hover .ant-btn {
+  background-color: rgba(221, 49, 49, 0.7) !important; /* Hover background for button */
+  color: #fff !important; /* Maintain text color on hover */
+}
+
+
+
