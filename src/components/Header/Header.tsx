@@ -7,7 +7,7 @@ import { CiViewList } from "react-icons/ci";
 import { FaRegPenToSquare } from "react-icons/fa6";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
-import { Avatar, Dropdown } from "antd";
+import { Avatar, Dropdown, Modal, Button } from "antd";
 import { Form, Input } from "antd";
 import { DownOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import Image from "next/image";
@@ -16,10 +16,9 @@ import img from "../../../public/Images/man-avatar.webp";
 
 const Header: React.FC = () => {
   const [searchText, setSearchText] = useState<string>("");
-  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
-  const [isButtonTranslate, setIsButtonTranslate] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [modal1Open, setModal1Open] = useState(false);
+  const [searchResults, setSearchResults] = useState<string | null>(null);
 
   const profileMenuItems = [
     {
@@ -80,19 +79,25 @@ const Header: React.FC = () => {
     }
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Search text:", searchText);
+  const handleSearch = (values: { search: string }) => {
+    setSearchText(values.search);
+    setSearchResults(`Results for "${values.search}"`);
+  };
+
+  const handleClose = () => {
+    setModal1Open(false);
+    setSearchText("");
+    setSearchResults(null);
   };
 
   return (
     <>
+      {/* Desktop Navbar */}
       <nav>
         <div className="h-[3.5em] w-full bg-white shadow-md relative dark:bg-gray-800 hidden md:block">
           <h2 className="text-[32px] md:ml-[4em] py-1 text-red-600 font-mono">
             QueryHub
           </h2>
-
           <ul className="flex gap-8 absolute top-3 left-[18em]">
             <li>
               <MdHome
@@ -147,11 +152,7 @@ const Header: React.FC = () => {
 
           {/* Avatar */}
           <div className="absolute top-3 right-[26em]">
-            <div
-              className="relative"
-              onMouseEnter={() => setIsAvatarHovered(true)}
-              onMouseLeave={() => setIsAvatarHovered(false)}
-            >
+            <div>
               <Avatar
                 icon={
                   <Image
@@ -179,10 +180,7 @@ const Header: React.FC = () => {
 
           {/* Language select icon */}
           <div className="absolute top-3 right-[12em]">
-            <div
-              onMouseEnter={() => setIsButtonTranslate(true)}
-              onMouseLeave={() => setIsButtonTranslate(false)}
-            >
+            <div>
               <MdLanguage
                 size={30}
                 className="text-gray-500 cursor-pointer hover:text-red-600 dark:text-white"
@@ -200,25 +198,66 @@ const Header: React.FC = () => {
         </div>
       </nav>
 
-      {/* Navbar Responsive */}
+      {/* Mobile Navbar */}
       <div className="md:hidden">
         <div className="h-[5.5vh] bg-red-600">
-          <div className="flex text-white gap-1 absolute top-2">
+          <div className="flex text-white absolute top-2 left-1" onClick={() => setModal1Open(true)}>
             <CiSearch size={25} />
             <h2 className="text-[15px]">Search</h2>
           </div>
+
+          <Modal
+            title="Search"
+            style={{ top: "20px" }}
+            open={modal1Open}
+            onCancel={handleClose}
+            footer={null}
+            width="80%"
+          >
+            <Form onFinish={handleSearch} layout="vertical">
+              <Form.Item
+                name="search"
+                label="Enter search term"
+                rules={[{ required: true, message: "Please enter a search term" }]}
+              >
+                <Input
+                  placeholder="Search..."
+                  onChange={(e) => setSearchText(e.target.value)}
+                  value={searchText}
+                />
+              </Form.Item>
+
+              {searchResults && <div className="my-4">{searchResults}</div>}
+
+              <div className="flex justify-between">
+                <Button
+                  onClick={handleClose}
+                  style={{ backgroundColor: "black", color: "white" }}
+                >
+                  Close
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  style={{ backgroundColor: "black", color: "white" }}
+                >
+                  Search
+                </Button>
+              </div>
+            </Form>
+          </Modal>
 
           <h2 className="text-white text-center text-[20px] py-1 font-mono">
             QueryHub
           </h2>
 
-          <div className="text-white absolute top-2 right-2 flex gap-1">
+          <div className="text-white absolute top-2 right-2 gap-[2px] flex">
             <PlusCircleOutlined size={25} />
             <h2 className="text-[15px]">Add</h2>
           </div>
 
           <div className="h-[6.5vh] bg-gray-100">
-            <ul className="flex gap-[0.1em]">
+            <ul className="flex px-[4px] py-1 gap-[3px] ">
               <li className="border-2 border-gray-300 p-1 px-3">
                 <MdHome
                   size={33}
@@ -233,7 +272,7 @@ const Header: React.FC = () => {
               </li>
               <li className="border-2 border-gray-300 p-1 px-3">
                 <FaRegPenToSquare
-                  size={33}
+                  size={30}
                   className="text-gray-500 cursor-pointer hover:text-red-600 dark:text-white dark:hover:text-red-600"
                 />
               </li>
