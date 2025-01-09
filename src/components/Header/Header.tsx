@@ -13,12 +13,31 @@ import { DownOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import "../../app/globals.css";
 import img from "../../../public/Images/man-avatar.webp";
+import { Tabs } from 'antd';
+import type { TabsProps } from 'antd';
 
 const Header: React.FC = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [modal1Open, setModal1Open] = useState(false);
   const [searchResults, setSearchResults] = useState<string | null>(null);
+  const [openResponsive, setOpenResponsive] = useState(false);
+
+
+  const onChange = (key: string) => {
+    console.log(key);
+  };
+  
+  const [uploadedImage, setUploadedImage] = useState<any>(null);
+
+  const handleImageUpload = (e: any) => {
+    const file = e.target.files[0];
+    if (file) {
+      const imageUrl  = URL.createObjectURL(file);
+      setUploadedImage(imageUrl);
+    }
+  };
+
 
   const profileMenuItems = [
     {
@@ -68,7 +87,9 @@ const Header: React.FC = () => {
   useEffect(() => {
     // Check the saved theme preference on component mount
     const savedTheme = localStorage.getItem("hs_theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
 
     if (savedTheme === "dark" || (savedTheme === "auto" && prefersDark)) {
       document.documentElement.classList.add("dark");
@@ -130,7 +151,9 @@ const Header: React.FC = () => {
             <Form onFinish={handleSearch} layout="inline">
               <Form.Item
                 name="search"
-                rules={[{ required: true, message: "Please enter your search text" }]}
+                rules={[
+                  { required: true, message: "Please enter your search text" },
+                ]}
               >
                 <div className="relative">
                   <CiSearch
@@ -173,10 +196,171 @@ const Header: React.FC = () => {
               icon={<DownOutlined />}
               menu={{ items: buttonMenuItems }}
               className="bg-[rgba(221,49,49,0.36)] hover:bg-[rgba(221,49,49,0.2)] text-white"
+              onClick={() => setOpenResponsive(true)}
             >
               Add Question
             </Dropdown.Button>
           </div>
+
+          <Modal
+      centered
+      open={openResponsive}
+      onCancel={() => setOpenResponsive(false)}
+      style={{ top: -15 }}
+      width={750}
+      footer={null}
+    >
+      <div style={{ height: "60vh", padding: "10px" }}>
+        <Tabs
+          defaultActiveKey="1"
+          items={[
+            {
+              key: "1",
+              label: <span>Add Question</span>,
+              children: (
+                <>
+                  <div
+                    style={{
+                      backgroundColor: "#e6f7ff",
+                      color: "#0050b3",
+                      padding: "10px",
+                      marginBottom: "15px",
+                      borderRadius: "0px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <strong>Tips on getting good answers quickly</strong>
+                    <ul style={{ margin: "10px 0", paddingLeft: "20px" }}>
+                      <li>Make sure your question has not been asked already</li>
+                      <li>Keep your question short and to the point</li>
+                      <li>Double-check grammar and spelling</li>
+                    </ul>
+                  </div>
+                  <Form layout="vertical">
+                    <Form.Item
+                      name="questionTitle"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter your question",
+                        },
+                      ]}
+                    >
+                      <Input
+                        placeholder='Start your question with "What", "How", "Why", etc'
+                        style={{
+                          border: "none",
+                          borderBottom: "1px solid #ccc",
+                          fontSize: "20px",
+                          fontFamily: "monospace",
+                        }}
+                        className="custom-input"
+                      />
+                    </Form.Item>
+                    <Form.Item>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        style={{ width: "100%" }}
+                      >
+                        Create Question
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </>
+              ),
+            },
+            {
+              key: "2",
+              label: <span>Create a Post</span>,
+              children: (
+                <>
+                  <div className="flex gap-2 my-5">
+                    <Avatar
+                      icon={
+                        <Image
+                          src={img}
+                          alt="avatar"
+                          width={40}
+                          height={40}
+                          className="rounded-full cursor-pointer"
+                        />
+                      }
+                    />
+                    <span className="text-[18px] ">Khwaja shaikh</span>
+                  </div>
+                  <Form layout="vertical">
+                    <Form.Item
+                      name="postTitle"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter a post title",
+                        },
+                      ]}
+                    >
+                      <Input
+                        placeholder="Enter post title"
+                        style={{
+                          border: "none",
+                          borderBottom: "1px solid #ccc",
+                          fontSize: "20px",
+                          fontFamily: "monospace",
+                        }}
+                        className="custom-input"
+                      />
+                    </Form.Item>
+                    <Form.Item>
+                      <Input
+                        type="file"
+                        // accept="image/*"
+                        // onChange={handleImageUpload}
+                        style={{
+                          border: "none",
+                          fontSize: "16px",
+                          marginBottom: "10px",
+                        }}
+                      />
+                    </Form.Item>
+                    {/* {uploadedImage && (
+                      <div
+                        style={{
+                          marginBottom: "10px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <Image
+                          src={uploadedImage}
+                          alt="Preview"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "100px",
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                    )} */}
+                    <Form.Item>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        style={{ width: "100%" }}
+                      >
+                        Create Post
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </>
+              ),
+            },
+          ]}
+        />
+      </div>
+    </Modal>
+
+
+
+
 
           {/* Language select icon */}
           <div className="absolute top-3 right-[12em]">
@@ -201,7 +385,10 @@ const Header: React.FC = () => {
       {/* Mobile Navbar */}
       <div className="md:hidden">
         <div className="h-[5.5vh] bg-red-600">
-          <div className="flex text-white absolute top-2 left-1" onClick={() => setModal1Open(true)}>
+          <div
+            className="flex text-white absolute top-2 left-1"
+            onClick={() => setModal1Open(true)}
+          >
             <CiSearch size={25} />
             <h2 className="text-[15px]">Search</h2>
           </div>
@@ -218,7 +405,9 @@ const Header: React.FC = () => {
               <Form.Item
                 name="search"
                 label="Enter search term"
-                rules={[{ required: true, message: "Please enter a search term" }]}
+                rules={[
+                  { required: true, message: "Please enter a search term" },
+                ]}
               >
                 <Input
                   placeholder="Search..."
@@ -251,7 +440,10 @@ const Header: React.FC = () => {
             QueryHub
           </h2>
 
-          <div className="text-white absolute top-2 right-2 gap-[2px] flex">
+          <div className="text-white absolute top-2 right-2 gap-[2px] flex"
+                        onClick={() => setOpenResponsive(true)}
+
+          >
             <PlusCircleOutlined size={25} />
             <h2 className="text-[15px]">Add</h2>
           </div>
