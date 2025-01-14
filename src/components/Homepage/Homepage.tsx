@@ -21,6 +21,30 @@ const Homepage: React.FC = () => {
     setShowFullDescription(!showFullDescription);
   };
 
+
+// Sample comments data
+  const comments = [
+    {
+      name: "John Doe",
+      date: "April 17, 2023",
+      comment:
+        "This is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elit This is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elitThis is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elitThis is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+    },
+    {
+      name: "Jane Smith",
+      date: "April 16, 2023",
+      comment:
+        "I agree with John. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+    {
+      name: "Bob Johnson",
+      date: "April 15, 2023",
+      comment:
+        "I have a different opinion. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    },
+  ];
+
+
   return (
     <div>
       <div className="flex justify-center align-center ">
@@ -74,7 +98,6 @@ const Homepage: React.FC = () => {
       <div className="flex justify-center py-10">
         <Card
           style={{ width: 750 }}
-          
           cover={
             <img
               alt="example"
@@ -84,6 +107,7 @@ const Homepage: React.FC = () => {
           }
           className="bg-white dark:bg-gray-800 shadow-md dark:shadow-lg rounded-lg"
           actions={[
+            <div>
             <div className="flex gap-8 px-5 h-auto ">
               <div className=" flex gap-3 h-8 w-[auto] px-2 mt-3  border-2 bg-orange-200 rounded-xl border-gray-500  ">
                 <BiUpvote
@@ -135,8 +159,50 @@ const Homepage: React.FC = () => {
                     <span className="sr-only">Send message</span>
                   </button>
                 </div>
-              </form>{" "}
-            </div>,
+              </form>
+      </div>
+
+
+
+{/* Comments Section */}
+<div className="mt-6 p-6">
+  {comments.map((comment, index) => (
+    <div
+      key={index}
+      className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg shadow mb-4"
+    >
+      {/* Avatar, Name, and Date */}
+      <div className="flex items-center mb-2">
+        <Avatar
+          icon={
+            <Image
+              src={img}
+              alt="avatar"
+              width={40}
+              height={40}
+              className="rounded-full cursor-pointer"
+            />
+          }
+        />
+        <div className="ml-3">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            {comment.name}
+          </h3>
+          <p className="text-sm text-gray-500">{comment.date}</p>
+        </div>
+      </div>
+      {/* Comment Content */}
+      <p className="text-gray-700 dark:text-gray-300 text-[15px] text-start">{comment.comment}</p>
+    </div>
+  ))}
+</div>
+
+
+
+
+
+
+        </div>
           ]}
         >
           <div className="flex gap-1">
@@ -206,6 +272,13 @@ const Homepage: React.FC = () => {
             </div>
           </div>
         </Card>
+
+
+
+
+
+
+
       </div>
     </div>
   );
