@@ -150,10 +150,8 @@ const Header: React.FC = () => {
           <div className="absolute left-[36em] top-7 transform z-0 -translate-y-1/2 hidden md:block">
             <Form onFinish={handleSearch} layout="inline">
               <Form.Item
-                name="search"
-                rules={[
-                  { required: true, message: "Please enter your search text" },
-                ]}
+                name="Search"
+
               >
                 <div className="relative">
                   <CiSearch

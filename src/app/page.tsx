@@ -4,8 +4,8 @@ import React from "react";
 
 const Home: React.FC = () => {
   return (
-    <div>
-    {/* <Homepage /> */}
+    <div className="dark:bg-gray-950 h-auto w-full">
+    <Homepage />
     </div>
   )
 }

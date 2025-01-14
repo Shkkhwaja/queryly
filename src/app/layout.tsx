@@ -30,6 +30,7 @@ export default function RootLayout({
         <head>
           <title>Query Hub</title>
           <link rel="icon" href="/queryhub-logo-1.png" type="image/png" />
+          <script src="./node_modules/preline/dist/preline.js"></script>
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
