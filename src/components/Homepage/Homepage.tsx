@@ -1,6 +1,7 @@
 "use client";
 import { Avatar, Card } from "antd";
 import img from "../../../public/Images/man-avatar.webp";
+import demo from "../../../public/demo.png";
 import Image from "next/image";
 import {
   EditOutlined,
@@ -95,21 +96,23 @@ const Homepage: React.FC = () => {
       </div>
 
       {/* card component */}
-      <div className="flex justify-center py-10">
+      <div className="flex justify-center py-2">
         <Card
           style={{ width: 750 }}
           cover={
-            <img
+            <div className="h-auto w-auto py-2 align-center justify-items-center">
+            <Image
               alt="example"
-              src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-              className="h-[40vh] rounded-lg"
+              src={demo}
+              className="rounded-lg"
             />
+            </div>
           }
-          className="bg-white dark:bg-gray-800 shadow-md dark:shadow-lg rounded-lg"
+          className=" bg-slate-100 dark:bg-gray-800 shadow-md dark:shadow-lg rounded-lg"
           actions={[
             <div>
             <div className="flex gap-8 px-5 h-auto ">
-              <div className=" flex gap-3 h-8 w-[auto] px-2 mt-3  border-2 bg-orange-200 rounded-xl border-gray-500  ">
+              <div className=" flex gap-3 h-8 w-[auto] px-2 mt-3  border-2 bg-orange-200  rounded-xl border-gray-500  ">
                 <BiUpvote
                   size={25}
                   className="text-black hover:text-purple-500"
@@ -165,7 +168,7 @@ const Homepage: React.FC = () => {
 
 
 {/* Comments Section */}
-<div className="mt-6 p-6">
+<div className="mt-2 p-6">
   {comments.map((comment, index) => (
     <div
       key={index}
@@ -192,7 +195,7 @@ const Homepage: React.FC = () => {
         </div>
       </div>
       {/* Comment Content */}
-      <p className="text-gray-700 dark:text-gray-300 text-[15px] text-start">{comment.comment}</p>
+      <p className="bg-gray-200 rounded-lg p-2 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-[15px] text-start">{comment.comment}</p>
     </div>
   ))}
 </div>
@@ -216,9 +219,9 @@ const Homepage: React.FC = () => {
           </div>
 
           <div className="flex items-start mt-4">
-            <div className="ml-10 text-gray-900 dark:text-white">
+            <div className="ml-10 bg-slate-200 p-4 rounded-lg text-gray-900 dark:text-white dark:bg-gray-900">
               <h3 className="text-lg font-semibold">Card title</h3>
-              <h3 className="text-lg font-normal text-gray-700 dark:text-gray-400">
+              <h3 className="text-lg font-normal bg-[#3a30301f] dark:bg-gray-950 text-center p-1 rounded-lg text-gray-800 dark:text-gray-300">
                 Lorem, ipsum dolor sit amet consectetur adipisicing elit.
               </h3>
               <div className="mt-2">

@@ -4,7 +4,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import BgImg from "../../../../public/Images/login-bg-image.webp";
 import { Button, Modal, Form, Input, Checkbox } from 'antd';
 
-const Login: React.FC = () => {
+const Signin: React.FC = () => {
   const [formStates, setFormStates] = useState({
     signin: { email: "", password: "" },
     signup: { email: "", password: "", terms: false },
@@ -82,7 +82,8 @@ const Login: React.FC = () => {
               placeholder="Your email"
               value={formStates.signin.email}
               onChange={(e) => handleInputChange("signin", "email", e.target.value)}
-            />
+              className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"
+              />
           </Form.Item>
 
           <Form.Item
@@ -92,13 +93,13 @@ const Login: React.FC = () => {
               placeholder="Your password"
               value={formStates.signin.password}
               onChange={(e) => handleInputChange("signin", "password", e.target.value)}
+              className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"
             />
           </Form.Item>
 
           <Button
-            type="primary"
             htmlType="submit"
-            className="w-full"
+            className="w-full bg-black text-white hover:bg-gray-700 transition-colors duration-200"
             loading={submitting}>
             {submitting ? "Submitting..." : "Login"}
           </Button>
@@ -109,14 +110,14 @@ const Login: React.FC = () => {
             Not Registered?{' '}
             <button
               onClick={() => setModals((prev) => ({ ...prev, signup: true }))}
-              className="text-blue-500 hover:underline">
+              className="text-black hover:underline ">
               Sign up
             </button>
           </p>
           <p className="mt-1">
             <button
               onClick={() => setModals((prev) => ({ ...prev, forgotPassword: true }))}
-              className="text-blue-500 hover:underline">
+              className="text-black hover:underline">
               Forgot password?
             </button>
           </p>
@@ -202,4 +203,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Signin;
