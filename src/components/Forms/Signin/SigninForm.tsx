@@ -4,7 +4,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import BgImg from "../../../../public/Images/login-bg-image.webp";
 import { Button, Modal, Form, Input, Checkbox } from 'antd';
 
-const Signin: React.FC = () => {
+const SigninForm: React.FC = () => {
   const [formStates, setFormStates] = useState({
     signin: { email: "", password: "" },
     signup: { email: "", password: "", terms: false },
@@ -203,4 +203,4 @@ const Signin: React.FC = () => {
   );
 };
 
-export default Signin;
+export default SigninForm;

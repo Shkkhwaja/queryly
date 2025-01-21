@@ -1,10 +1,10 @@
-import Signin from '@/components/Forms/Signin/Signin'
+import SigninForm from '@/components/Forms/Signin/SigninForm'
 import React from 'react'
 
 const LoginPage: React.FC = () => {
   return (
     <div>
-      <Signin />
+      <SigninForm />
     </div>
   )
 }
