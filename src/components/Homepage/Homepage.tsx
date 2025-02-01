@@ -1,289 +1,222 @@
 "use client";
+
 import { Avatar, Card } from "antd";
-import img from "../../../public/Images/man-avatar.webp";
-import demo from "../../../public/demo.png";
-import Image from "next/image";
-import {
-  EditOutlined,
-  EllipsisOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
-import { BiUpvote } from "react-icons/bi";
-import { FaRegCommentDots } from "react-icons/fa6";
-
-import { useState } from "react";
-
-const { Meta } = Card;
+import React, { useState } from "react";
+import { FiSearch, FiSend } from "react-icons/fi";
+import { FaGraduationCap } from "react-icons/fa";
+import Link from "next/link";
+import Header from "../Header/Header";
 
 const Homepage: React.FC = () => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
-  const toggleDescription = () => {
-    setShowFullDescription(!showFullDescription);
-  };
-
-
-// Sample comments data
-  const comments = [
-    {
-      name: "John Doe",
-      date: "April 17, 2023",
-      comment:
-        "This is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elit This is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elitThis is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elitThis is a sample comment. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-    },
-    {
-      name: "Jane Smith",
-      date: "April 16, 2023",
-      comment:
-        "I agree with John. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    },
-    {
-      name: "Bob Johnson",
-      date: "April 15, 2023",
-      comment:
-        "I have a different opinion. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    },
+  const categories = [
+    "Semester 1",
+    "Semester 2",
+    "Semester 3",
+    "Semester 4",
+    "Semester 5",
+    "Semester 6",
   ];
 
+  const [question, setQuestion] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semester 1");
+  const [recentQuestions, setRecentQuestions] = useState([
+    {
+      id: 1,
+      title: "What are the library hours during finals week?",
+      description: "I need to plan my study schedule for the upcoming finals.",
+      author: {
+        name: "Sarah Chen",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+      },
+      comments: [
+        { user: "John Doe", text: "This is the first comment." },
+        { user: "Jane Smith", text: "This is the second comment." },
+      ],
+      commentsNum: 2,
+      tag: "Semester 1",
+      aiAnswer: "The library is open from 8 AM to 10 PM during finals week.",
+    },
+    {
+      id: 2,
+      title: "What are the library hours during finals week?",
+      description: "I need to plan my study schedule for the upcoming finals.",
+      author: {
+        name: "Sarah Chen",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+      },
+      comments: [
+        { user: "John Doe", text: "This is the first comment." },
+        { user: "Jane Smith", text: "This is the second comment." },
+      ],
+      commentsNum: 2,
+      tag: "Semester 1",
+      aiAnswer: "The library is open from 8 AM to 10 PM during finals week.",
+    },
+  ]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (question.trim().length < 10) {
+      alert("Question must be at least 10 characters long");
+      return;
+    }
+    console.log({ question, selectedCategory });
+    setQuestion("");
+  };
+
+  const handleCommentSubmit = (questionId: number, commentText: string) => {
+    if (commentText.trim().length === 0) return;
+
+    setRecentQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q.id === questionId
+          ? {
+              ...q,
+              comments: [
+                ...q.comments,
+                { user: "Current User", text: commentText },
+              ],
+              commentsNum: q.commentsNum + 1,
+            }
+          : q
+      )
+    );
+  };
 
   return (
-    <div>
-      <div className="flex justify-center align-center ">
-        <form className="w-[60vw] rounded-sm p-4">
-          <label htmlFor="chat" className="sr-only">
-            Ask Question...
-          </label>
-          <div className="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
-            {/* Avatar */}
-            <div className="relative">
-              <div>
-                <Avatar
-                  icon={
-                    <Image
-                      src={img}
-                      alt="avatar"
-                      width={40}
-                      height={40}
-                      className="rounded-full cursor-pointer"
-                    />
-                  }
-                />
-              </div>
-            </div>
+    <>
+      <Header />
 
-            <textarea
-              id="chat"
-              className="h-[7vh] resize-none block mx-4 p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Ask Question..."
-            ></textarea>
-            <button
-              type="submit"
-              className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600"
-            >
-              <svg
-                className="w-5 h-5 rotate-90 rtl:-rotate-90"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 18 20"
-              >
-                <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
-              </svg>
-              <span className="sr-only">Send message</span>
-            </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-800">
+        <div className="container mx-auto px-4 pt-20 pb-12 dark:bg-neutral-800">
+          <div className="text-center mb-16">
+            <FaGraduationCap className="text-6xl text-blue-600 mx-auto mb-6" />
+            <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Welcome to Queryly
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Your AI-powered Q&A platform for TMV College. Get instant answers
+              to your questions.
+            </p>
           </div>
-        </form>
-      </div>
 
-      {/* card component */}
-      <div className="flex justify-center py-2">
-        <Card
-          style={{ width: 750 }}
-          cover={
-            <div className="h-auto w-auto py-2 align-center justify-items-center">
-            <Image
-              alt="example"
-              src={demo}
-              className="rounded-lg"
-            />
-            </div>
-          }
-          className=" bg-slate-100 dark:bg-gray-800 shadow-md dark:shadow-lg rounded-lg"
-          actions={[
-            <div>
-            <div className="flex gap-8 px-5 h-auto ">
-              <div className=" flex gap-3 h-8 w-[auto] px-2 mt-3  border-2 bg-orange-200  rounded-xl border-gray-500  ">
-                <BiUpvote
-                  size={25}
-                  className="text-black hover:text-purple-500"
+          <div className="max-w-3xl mx-auto mb-20">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Ask a question about TMV College..."
+                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <h2 className=" text-[18px] text-black font-bold">5</h2>
+                <FiSearch className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
               </div>
-              <form className="w-[60vw] rounded-sm ">
-                <label htmlFor="chat" className="sr-only">
-                  Your message
-                </label>
-                <div className="flex items-center px-3 py-2 rounded-lg bg-orange-200 ">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div>
-                      <Avatar
-                        icon={
-                          <Image
-                            src={img}
-                            alt="avatar"
-                            width={40}
-                            height={40}
-                            className="rounded-full cursor-pointer"
-                          />
-                        }
-                      />
-                    </div>
-                  </div>
 
-                  <textarea
-                    id="chat"
-                    className="h-[5vh] resize-none block mx-4 p-1.5 px-4 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500  dark:border-gray-600 dark:placeholder-gray-400  dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Comments..."
-                  ></textarea>
-                  <button
-                    type="submit"
-                    className="inline-flex justify-center p-2 text-blue-600 rounded-full cursor-pointer hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600"
-                  >
-                    <svg
-                      className="w-5 h-5 rotate-90 rtl:-rotate-90"
-                      aria-hidden="true"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="currentColor"
-                      viewBox="0 0 18 20"
-                    >
-                      <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
-                    </svg>
-                    <span className="sr-only">Send message</span>
-                  </button>
-                </div>
-              </form>
-      </div>
+              <div className="flex gap-4">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
 
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <span>Submit Question</span>
+                  <FiSend />
+                </button>
+              </div>
+            </form>
+          </div>
 
-
-{/* Comments Section */}
-<div className="mt-2 p-6">
-  {comments.map((comment, index) => (
-    <div
-      key={index}
-      className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg shadow mb-4"
-    >
-      {/* Avatar, Name, and Date */}
-      <div className="flex items-center mb-2">
-        <Avatar
-          icon={
-            <Image
-              src={img}
-              alt="avatar"
-              width={40}
-              height={40}
-              className="rounded-full cursor-pointer"
-            />
-          }
-        />
-        <div className="ml-3">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {comment.name}
-          </h3>
-          <p className="text-sm text-gray-500">{comment.date}</p>
-        </div>
-      </div>
-      {/* Comment Content */}
-      <p className="bg-gray-200 rounded-lg p-2 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-[15px] text-start">{comment.comment}</p>
-    </div>
-  ))}
-</div>
-
-
-
-
-
-
-        </div>
-          ]}
-        >
-          <div className="flex gap-1">
-            <Avatar
-              src="https://api.dicebear.com/7.x/miniavs/svg?seed=8"
-              className="dark:bg-gray-700"
-            />
-            <h2 className="text-[16px] pt-1 font-bold text-fuchsia-600">
-              Khwaja Shaikh
+          <div className="w-[90vw] mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              Recent Questions
             </h2>
-          </div>
-
-          <div className="flex items-start mt-4">
-            <div className="ml-10 bg-slate-200 p-4 rounded-lg text-gray-900 dark:text-white dark:bg-gray-900">
-              <h3 className="text-lg font-semibold">Card title</h3>
-              <h3 className="text-lg font-normal bg-[#3a30301f] dark:bg-gray-950 text-center p-1 rounded-lg text-gray-800 dark:text-gray-300">
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-              </h3>
-              <div className="mt-2">
-                {showFullDescription ? (
-                  <>
-                    <p className="dark:text-gray-300">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit. A
-                      amet cumque inventore, est, quos ipsum sed qui harum,
-                      laboriosam quod nam laudantium natus aperiam quasi
-                      distinctio labore! Maiores tempora sunt, assumenda velit
-                      inventore quam voluptatem suscipit aliquid corporis
-                      repellat beatae deserunt ex dolore atque quasi modi quia
-                      voluptates repellendus nesciunt.
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
+              {recentQuestions.map((question, index) => (
+                <div
+                  key={index}
+                  className="bg-white w-full p-6 rounded-lg shadow-md border border-gray-200 dark:bg-neutral-700 dark:text-white"
+                >
+                  <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-white">
+                    {question.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 dark:text-gray-400">
+                    {question.description}
+                  </p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={question.author.avatar}
+                        alt={question.author.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-white">
+                        {question.author.name}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {question.commentsNum} comments
+                    </span>
+                  </div>
+                  <div className="mt-4 mb-4">
+                    <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold">
+                      {question.tag}
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 dark:bg-neutral-800">
+                    <p className="font-semibold text-gray-800 dark:text-white">
+                      AI Answer:
                     </p>
-                    <p className="dark:text-gray-300">
-                      Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                      Adipisci ullam quo consequuntur. Doloremque, non iste
-                      eaque magni consequuntur ratione aliquid impedit quos
-                      asperiores maxime iusto a expedita quis. In aut ipsa
-                      itaque. Cumque minima cupiditate rerum sunt. Harum placeat
-                      at numquam, repellat optio ab? Vero beatae consectetur
-                      ipsa delectus itaque?.
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {question.aiAnswer}
                     </p>
-                    <button
-                      onClick={toggleDescription}
-                      className="text-blue-500 dark:text-blue-400"
-                    >
-                      Read less
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className="dark:text-gray-300">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit. A
-                      amet cumque inventore, est, quos ipsum sed qui harum,
-                      laboriosam quod nam laudantium natus aperiam quasi
-                      distinctio labore! Maiores tempora sunt, assumenda velit
-                      inventore quam voluptatem suscipit aliquid corporis
-                      repellat beatae deserunt ex dolore atque quasi modi quia
-                      voluptates repellendus nesciunt.
-                    </p>
-                    <button
-                      onClick={toggleDescription}
-                      className="text-blue-500 dark:text-blue-400"
-                    >
-                      Read more
-                    </button>
-                  </>
-                )}
-              </div>
+                  </div>
+                  <div className="mt-4">
+                    <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                      Comments:
+                    </h4>
+                    <div className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-200 dark:bg-neutral-800">
+                      {question.comments.map((comment, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <Avatar src={question.author.avatar} />
+                          <p className="text-gray-700 dark:text-gray-300">
+                            {comment.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <form className="mt-4 flex gap-2">
+                      <input
+                        type="text"
+                        name="comment"
+                        placeholder="Add a comment..."
+                        className="flex-1 px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Send
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </Card>
-
-
-
-
-
-
-
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

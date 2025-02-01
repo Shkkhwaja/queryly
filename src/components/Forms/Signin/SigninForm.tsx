@@ -3,16 +3,17 @@ import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import BgImg from "../../../../public/Images/login-bg-image.webp";
 import { Button, Form, Input, Modal } from "antd";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import Link from 'next/link'
+import { useRouter } from "next/navigation";
 
 
 
 
 const SigninForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
-
+  const router = useRouter()
   
   const handleSubmitSignin = async (values: any) => {
     setSubmitting(true);
@@ -32,6 +33,8 @@ const SigninForm: React.FC = () => {
       const data = await response.json()
       if(response.ok){
         toast.success("Login Successfully")
+        localStorage.setItem("isLoggedIn", "true");
+        router.push("/")
       }else{
         toast.error(data.error || "An error occurred during Login.")
       }
@@ -46,8 +49,9 @@ const SigninForm: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
-                <ToastContainer position="top-right" autoClose={5000} />
-
+<Toaster
+  position="top-center"
+/>
       <div
         className="absolute top-0 left-0 w-full h-full"
         style={{

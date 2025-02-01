@@ -5,12 +5,15 @@ import BgImg from "../../../../public/Images/login-bg-image.webp";
 import { Button, Form, Input, Checkbox, FormProps, Modal } from "antd";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 
 const { OTP } = Input;
 
 const SignupForm: React.FC = () => {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,6 +87,7 @@ const SignupForm: React.FC = () => {
       if (response.ok) {
         toast.success("OTP verified successfully!");
         handleOk(); // Close modal
+        router.push("/form/signin")
       } else {
         toast.error(data.error || "Failed to verify OTP.");
       }
@@ -138,7 +142,9 @@ const SignupForm: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
-      <ToastContainer position="top-right" autoClose={5000} />
+<Toaster
+  position="top-center"
+/>
       <div
         className="absolute top-0 left-0 w-full h-full"
         style={{
@@ -233,36 +239,35 @@ const SignupForm: React.FC = () => {
         width={400}
       >
         <Form
-  name="otpForm"
-  onFinish={handleOtpSubmit}
-  layout="vertical"
-  autoComplete="off"
->
-  <Form.Item
-    label="Enter OTP"
-    name="otp"
-    rules={[
-      { required: true, message: "Please enter your OTP." },
-      { len: 6, message: "OTP must be 6 digits." },
-      {
-        pattern: /^[0-9]+$/,
-        message: "OTP must contain numbers only.",
-      },
-    ]}
-  >
-    <OTP length={6} />
-  </Form.Item>
-  <h2
-    className="py-4 text-blue-600 underline cursor-pointer text-left inline-block hover:text-blue-500 "
-    onClick={handleResendOtp}
-  >
-    Resend OTP
-  </h2>
-  <Button htmlType="submit" className="w-full py-2 bg-black text-white" loading={loading}>
-    {loading ? "Verifying..." : "Verify OTP"}
-  </Button>
-</Form>
-
+          name="otpForm"
+          onFinish={handleOtpSubmit}
+          layout="vertical"
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Enter OTP"
+            name="otp"
+            rules={[
+              { required: true, message: "Please enter your OTP." },
+              { len: 6, message: "OTP must be 6 digits." },
+              {
+                pattern: /^[0-9]+$/,
+                message: "OTP must contain numbers only.",
+              },
+            ]}
+          >
+            <OTP length={6} />
+          </Form.Item>
+          <h2
+            className="py-4 text-blue-600 underline cursor-pointer text-left inline-block hover:text-blue-500 "
+            onClick={handleResendOtp}
+          >
+            Resend OTP
+          </h2>
+          <Button htmlType="submit" className="w-full py-2 bg-black text-white" loading={loading}>
+            {loading ? "Verifying..." : "Verify OTP"}
+          </Button>
+        </Form>
       </Modal>
     </div>
   );
