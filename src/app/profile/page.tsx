@@ -128,7 +128,8 @@ const Profile = () => {
                 <CldUploadWidget
                   uploadPreset="queryly"
                   onSuccess={async (result) => {
-                    const avatarUrl = result?.info?.secure_url;
+                    const info = result.info as { secure_url?: string }; 
+                    const avatarUrl = info?.secure_url || "";
                     setCloudinaryAvatar(avatarUrl); // Update state
                     try {
                       const response = await fetch("/api/users/uploadavatar", {
