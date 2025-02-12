@@ -45,7 +45,7 @@ const SignupForm: React.FC = () => {
       const response = await fetch("/api/users/signup", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           name: values.name,
@@ -77,7 +77,7 @@ const SignupForm: React.FC = () => {
       const response = await fetch("/api/users/otpverify", {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ otp: values.otp }),
       });
@@ -109,7 +109,7 @@ const SignupForm: React.FC = () => {
       const response = await fetch("/api/users/resendotp", {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ email }),
       });
