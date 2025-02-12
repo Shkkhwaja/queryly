@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     });
 
     const savedUser = await newUser.save();
-    console.log(savedUser);
 
     // Generate auth token for OTP verification
     const token = jwt.sign(
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Set auth token in cookies
     response.cookies.set('authToken', token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600, // 1 hour
