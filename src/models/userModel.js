@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     otp: { type: Number },
     isVerified: { type: Boolean, default: false },
-    avatar: {type:String}
+    avatar: {type:String},
+    questions:{type:Number, default:0}
 }, { timestamps: true });
 
 const userModel = mongoose.models.users || mongoose.model('users', userSchema);

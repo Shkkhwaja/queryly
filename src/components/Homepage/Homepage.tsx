@@ -1,11 +1,14 @@
 "use client";
 
-import { Avatar, Card } from "antd";
-import React, { useState } from "react";
+import { Avatar, Input, Form, Select, Button } from "antd";
+import React, { useState,useEffect } from "react";
 import { FiSearch, FiSend } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import Link from "next/link";
 import Header from "../Header/Header";
+
+const { Option } = Select;
+
 
 const Homepage: React.FC = () => {
   const categories = [
@@ -19,69 +22,88 @@ const Homepage: React.FC = () => {
 
   const [question, setQuestion] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semester 1");
-  const [recentQuestions, setRecentQuestions] = useState([
-    {
-      id: 1,
-      title: "What are the library hours during finals week?",
-      description: "I need to plan my study schedule for the upcoming finals.",
-      author: {
-        name: "Sarah Chen",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-      },
-      comments: [
-        { user: "John Doe", text: "This is the first comment." },
-        { user: "Jane Smith", text: "This is the second comment." },
-      ],
-      commentsNum: 2,
-      tag: "Semester 1",
-      aiAnswer: "The library is open from 8 AM to 10 PM during finals week.",
-    },
-    {
-      id: 2,
-      title: "What are the library hours during finals week?",
-      description: "I need to plan my study schedule for the upcoming finals.",
-      author: {
-        name: "Sarah Chen",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-      },
-      comments: [
-        { user: "John Doe", text: "This is the first comment." },
-        { user: "Jane Smith", text: "This is the second comment." },
-      ],
-      commentsNum: 2,
-      tag: "Semester 1",
-      aiAnswer: "The library is open from 8 AM to 10 PM during finals week.",
-    },
-  ]);
+  const [recentQuestions, setRecentQuestions]: any = useState([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (question.trim().length < 10) {
-      alert("Question must be at least 10 characters long");
-      return;
+const fetchData = async () => {
+  try {
+    const response = await fetch("/api/post/question")
+  if(!response.ok){
+    console.log("Failed  to fetch questions")
+    return; 
+  }
+  const data = await response.json()
+  setRecentQuestions(data) 
+  } catch (error:any) {
+    console.error("Error fetching questions:", error);
+  }
+}
+
+  const handleSubmit = async (values: any) => {
+    try {
+      const response = await fetch("/api/post/question", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          question: values.question,
+          semester: values.category,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to post question");
+      }
+
+      const data = await response.json();
+      console.log("Question posted:", data);
+      setQuestion(""); // Clear input field
+      fetchData()
+      
+    } catch (error) {
+      console.error("Error posting question:", error);
     }
-    console.log({ question, selectedCategory });
-    setQuestion("");
   };
 
-  const handleCommentSubmit = (questionId: number, commentText: string) => {
-    if (commentText.trim().length === 0) return;
+  useEffect(() => {
+    console.log("data ",recentQuestions)
+    fetchData(); 
+  }, []);
 
-    setRecentQuestions((prevQuestions) =>
-      prevQuestions.map((q) =>
-        q.id === questionId
-          ? {
-              ...q,
-              comments: [
-                ...q.comments,
-                { user: "Current User", text: commentText },
-              ],
-              commentsNum: q.commentsNum + 1,
-            }
-          : q
-      )
-    );
+  const handleComment = async (values: any) => {
+    try {
+      // Ensure you are accessing the correct question ID
+    const postId = recentQuestions.length > 0 ? recentQuestions[0]._id : null; // Change index as needed
+      console.log("postId",postId);
+      
+    if (!postId) {
+      throw new Error("No valid post ID found");
+    }
+      const response = await fetch("/api/post/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: values.comment,
+          postId: postId,
+          avatar: recentQuestions[0].avatar,
+          name: recentQuestions[0].name,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json(); 
+        throw new Error(errorData.error || "Failed to post comment");
+      }
+  
+      const data = await response.json(); 
+      console.log("Comment posted: ", data);
+    } catch (error) {
+      console.error("Error posting comment: ", error);
+    }
   };
+
 
   return (
     <>
@@ -101,40 +123,35 @@ const Homepage: React.FC = () => {
           </div>
 
           <div className="max-w-3xl mx-auto mb-20">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <input
-                  type="text"
+          <Form onFinish={handleSubmit} className="space-y-4">
+              <Form.Item name="question" rules={[{ required: true, message: "Please enter your question" }]}> 
+                <Input
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Ask a question about TMV College..."
-                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
+
                 />
-                <FiSearch className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
-              </div>
+              </Form.Item>
 
               <div className="flex gap-4">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500"
-                >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                <Form.Item name="category" initialValue={selectedCategory}>
+                  <Select onChange={(value) => setSelectedCategory(value)}>
+                    {categories.map((category) => (
+                      <Option key={category} value={category}>
+                        {category}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
 
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <span>Submit Question</span>
-                  <FiSend />
-                </button>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" icon={<FiSend />}>
+                    Submit Question
+                  </Button>
+                </Form.Item>
               </div>
-            </form>
+            </Form>
           </div>
 
           <div className="w-[90vw] mx-auto">
@@ -142,17 +159,15 @@ const Homepage: React.FC = () => {
               Recent Questions
             </h2>
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
-              {recentQuestions.map((question, index) => (
+              {recentQuestions.map((question : any) => (
                 <div
-                  key={index}
-                  className="bg-white w-full p-6 rounded-lg shadow-md border border-gray-200 dark:bg-neutral-700 dark:text-white"
+                  key={question._id}
+                  className="bg-white w-full p-6 rounded-lg shadow-md border border-gray-200 dark:bg-neutral-700 dark:text-white "
                 >
                   <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-white">
-                    {question.title}
+                    {question.question}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4 dark:text-gray-400">
-                    {question.description}
-                  </p>
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <img
@@ -160,8 +175,8 @@ const Homepage: React.FC = () => {
                         alt={question.author.name}
                         className="w-8 h-8 rounded-full object-cover"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-white">
-                        {question.author.name}
+                      <span className="text-base font-bold  text-gray-700 dark:text-white">
+                        {question.author.user.name}
                       </span>
                     </div>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -169,14 +184,24 @@ const Homepage: React.FC = () => {
                     </span>
                   </div>
                   <div className="mt-4 mb-4">
-                    <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold">
-                      {question.tag}
+                    <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold capitalize">
+                      {question.semester}
                     </span>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 dark:bg-neutral-800">
-                    <p className="font-semibold text-gray-800 dark:text-white">
+                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
                       AI Answer:
-                    </p>
+                    </h4>
+                  <div
+                    className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[200px] overflow-y-auto
+  [&::-webkit-scrollbar]:w-3
+  [&::-webkit-scrollbar-track]:rounded-full
+  [&::-webkit-scrollbar-track]:bg-gray-50
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-300
+  dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+                  >
+                    
                     <p className="text-gray-700 dark:text-gray-300">
                       {question.aiAnswer}
                     </p>
@@ -185,30 +210,45 @@ const Homepage: React.FC = () => {
                     <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
                       Comments:
                     </h4>
-                    <div className="space-y-2 bg-gray-50 p-4 rounded-lg border border-gray-200 dark:bg-neutral-800">
-                      {question.comments.map((comment, index) => (
-                        <div key={index} className="flex items-center gap-3">
+                    <div className="space-y-2 bg-gray-50 p-4 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[100px] overflow-y-auto
+  [&::-webkit-scrollbar]:w-3
+  [&::-webkit-scrollbar-track]:rounded-full
+  [&::-webkit-scrollbar-track]:bg-gray-50
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-300
+  dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+    {question.commentsNum !== 0 ? 
+    <>
+    {question.comments.map((comment :any) => (
+                        <div key={comment._id} className="flex items-center gap-3">
                           <Avatar src={question.author.avatar} />
                           <p className="text-gray-700 dark:text-gray-300">
                             {comment.text}
                           </p>
                         </div>
-                      ))}
+                      ))} 
+                      </>
+                      : "No comment"}
+                      
                     </div>
-                    <form className="mt-4 flex gap-2">
-                      <input
-                        type="text"
-                        name="comment"
-                        placeholder="Add a comment..."
-                        className="flex-1 px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Send
-                      </button>
-                    </form>
+                    <Form onFinish={handleComment} className="mt-4 flex gap-2">
+              <Form.Item name="comment" className="flex-1" rules={[{ required: true, message: "Please enter your comment" }]} >
+                <Input
+                  placeholder="Add a comment..."
+                  className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button
+                  htmlType="submit"
+                  icon={<FiSend />}
+                  className="px-6 py-5  text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
+                >
+                  Send
+                </Button>
+              </Form.Item>
+            </Form>
                   </div>
                 </div>
               ))}
