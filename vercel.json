@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/users/signup.js": {
+      "api/users/signup/route.ts": {
         "maxDuration": 30
       }
     }
