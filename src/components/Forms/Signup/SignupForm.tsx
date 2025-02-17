@@ -41,6 +41,8 @@ const SignupForm: React.FC = () => {
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values: any) => {
     setSubmitting(true);
+    const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch("/api/users/signup", {
         method: "POST",
