@@ -1,7 +1,0 @@
-{
-    "functions": {
-      "api/users/signup/route.ts": {
-        "maxDuration": 30
-      }
-    }
-  }
