@@ -11,6 +11,7 @@ import { MdHome } from "react-icons/md";
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   // Function to toggle dark/light mode
   const toggleTheme = () => {
@@ -23,6 +24,31 @@ const Header = () => {
     html.classList.add(newMode);
     setIsDarkMode(!isDarkMode);
   };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch("/api/users/profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setAvatarUrl(result.data.avatar);
+        } else {
+          console.error("No token found. Please login.");
+        }
+      } catch (error: any) {
+        console.error("An error occurred. Please try again.");
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
 
   useEffect(() => {
     // Check the saved theme preference on component mount
@@ -55,7 +81,7 @@ const Header = () => {
       <div className="absolute flex gap-[3em] right-[5em] top-4">
         <Link href="/profile">
           <Avatar
-            src="https://images.unsplash.com/photo-1633332755192-727a05c4013d"
+            src={avatarUrl}
             alt="avatar"
             size={35}
             className="cursor-pointer"

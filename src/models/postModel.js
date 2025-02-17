@@ -18,7 +18,9 @@ const postSchema = new mongoose.Schema({
     },
   ],
   semester: { type: String, required: true },
-});
+},
+{ timestamps: true }
+);
 
 const postModel = mongoose.models.posts || mongoose.model("posts", postSchema);
 
