@@ -8,6 +8,10 @@ import { FaGraduationCap } from "react-icons/fa";
 import Link from "next/link";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import { MdHome } from "react-icons/md";
+import { toast } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+
+
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -66,8 +70,26 @@ const Header = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (avatarUrl === "") {
+      const intervalId = setInterval(() => {
+        toast('Update Avatar!', {
+          icon: '⚠️',
+        });
+      }, 2000); // Show the toast every 2 seconds
+  
+      return () => clearInterval(intervalId);
+    }
+  }, [avatarUrl]);
+  
+  
+
   return (
     <div>
+      <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
       <div className="absolute left-10 top-4">
         <Link href="/">
           <MdHome
@@ -81,7 +103,7 @@ const Header = () => {
       <div className="absolute flex gap-[3em] right-[5em] top-4">
         <Link href="/profile">
           <Avatar
-            src={avatarUrl === "" ? "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png" : avatarUrl}
+            src={avatarUrl || "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png"}
             alt="avatar"
             size={35}
             className="cursor-pointer"

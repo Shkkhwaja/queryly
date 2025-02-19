@@ -9,11 +9,10 @@ import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-
 const { OTP } = Input;
 
 const SignupForm: React.FC = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,7 +41,7 @@ const SignupForm: React.FC = () => {
   const onFinish: FormProps<FieldType>["onFinish"] = async (values: any) => {
     setSubmitting(true);
     const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch("/api/users/signup", {
         method: "POST",
@@ -58,7 +57,9 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const data = await response.json();
       if (response.ok) {
-        toast.success("Signup successful! Please check your email for the OTP.");
+        toast.success(
+          "Signup successful! Please check your email for the OTP."
+        );
         setEmail(values.email); // Set the email for OTP resend
         showModal(); // Show OTP Modal after successful signup
       } else {
@@ -89,7 +90,7 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
       if (response.ok) {
         toast.success("OTP verified successfully!");
         handleOk(); // Close modal
-        router.push("/form/signin")
+        router.push("/form/signin");
       } else {
         toast.error(data.error || "Failed to verify OTP.");
       }
@@ -129,7 +130,9 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
     }
   };
 
-  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
+  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
+    errorInfo
+  ) => {
     console.log("Failed:", errorInfo);
   };
 
@@ -144,9 +147,7 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
-<Toaster
-  position="top-center"
-/>
+      <Toaster position="top-center" />
       <div
         className="absolute top-0 left-0 w-full h-full"
         style={{
@@ -183,25 +184,32 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
             label="Name"
             name="name"
             rules={[{ required: true, message: "Please enter your Name" }]}
-            
           >
-            <Input placeholder="Your name" 
-            className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"/>
+            <Input
+              placeholder="Your name"
+              className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"
+            />
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
             rules={[{ required: true, message: "Please enter your email" }]}
-            
           >
-            <Input type="email" placeholder="Your email" className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2" />
+            <Input
+              type="email"
+              placeholder="Your email"
+              className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"
+            />
           </Form.Item>
           <Form.Item
             label="Password"
             name="password"
             rules={[{ required: true, message: "Please enter your password" }]}
           >
-            <Input.Password placeholder="Your password" className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2" />
+            <Input.Password
+              placeholder="Your password"
+              className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"
+            />
           </Form.Item>
           <Form.Item
             name="terms"
@@ -211,7 +219,9 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
                 validator: (_, value) =>
                   value
                     ? Promise.resolve()
-                    : Promise.reject("You must accept the terms and conditions."),
+                    : Promise.reject(
+                        "You must accept the terms and conditions."
+                      ),
               },
             ]}
           >
@@ -228,8 +238,12 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
               </button>
             </Link>
           </p>
-          <Button type="primary" htmlType="submit" className="w-full" loading={submitting}>
-            {submitting ? "Submitting..." : "Signup"}
+          <Button
+            htmlType="submit"
+            className="w-full bg-black text-white hover:bg-gray-700 transition-colors duration-200"
+            loading={submitting}
+          >
+            {submitting ? "Submitting..." : "Login"}
           </Button>
         </Form>
         <div className="mt-5 text-center text-xs text-gray-500">
@@ -269,7 +283,11 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
           >
             Resend OTP
           </h2>
-          <Button htmlType="submit" className="w-full py-2 bg-black text-white" loading={loading}>
+          <Button
+            htmlType="submit"
+            className="w-full py-2 bg-black text-white"
+            loading={loading}
+          >
             {loading ? "Verifying..." : "Verify OTP"}
           </Button>
         </Form>

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Avatar, Input, Form, Select, Button } from "antd";
 import React, { useState, useEffect } from "react";
@@ -8,14 +8,9 @@ import Header from "../Header/Header";
 import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 
-
 const { Option } = Select;
 
 const Homepage: React.FC = () => {
-
-
-
-
   const categories = [
     "Semester 1",
     "Semester 2",
@@ -42,19 +37,18 @@ const Homepage: React.FC = () => {
       }
       const data = await response.json();
       setRecentQuestions(data);
+      
     } catch (error: any) {
       console.error("Error fetching questions:", error);
     }
   };
-
-
 
   const aiAnswer = async (postId: string, question: string) => {
     try {
       if (!postId || !question) {
         throw new Error("postId and question are required.");
       }
-  
+
       const response = await fetch("/api/post/aianswer", {
         method: "POST",
         headers: {
@@ -62,20 +56,18 @@ const Homepage: React.FC = () => {
         },
         body: JSON.stringify({ postId, question }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to generate AI answer.");
       }
-  
+
       const data = await response.json();
       // console.log("AI Answer:", data);
     } catch (error: any) {
       console.error("Error generating AI answer:", error.message);
     }
   };
-
-  
 
   const handleSubmit = async (values: any) => {
     try {
@@ -96,12 +88,10 @@ const Homepage: React.FC = () => {
 
       const data = await response.json();
       // console.log("data",data.data);
-      
-      setTimeout(() => {
-        aiAnswer(data.data.id, data.data.question);
-      }, 3000);
+
+      aiAnswer(data.data.id, data.data.question);
       fetchData();
- 
+
       questionForm.resetFields();
     } catch (error) {
       console.error("Error posting question:", error);
@@ -110,7 +100,7 @@ const Homepage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [handleSubmit,aiAnswer]);
+  }, [handleSubmit, aiAnswer]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -171,23 +161,34 @@ const Homepage: React.FC = () => {
       fetchData();
       // console.log("data : ", data);
       setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset the comment input for this post
-      
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
+  const formatText = (text: string) => {
+    if (!text) return "";
 
-
-
-
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>') // Extra bold
+      .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>') // Bold
+      .replace(
+        /`(=|\+=|-=|\/=|%=|\/\/=)`/g,
+        '<code class="bg-gray-100 dark:bg-gray-800 text-blue-500 p-1 rounded">$1</code>'
+      ) // Highlight only operators
+      .replace(
+        /`([^`]+)`/g,
+        '<code class="bg-gray-100 dark:bg-gray-800 p-1 rounded">$1</code>'
+      ) // Inline code without color
+      .replace(/\n/g, "<br>") // Line breaks
+  };
 
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-800">
-                <Toaster position="top-center" />
-        
+        <Toaster position="top-center" />
+
         <div className="container mx-auto px-4 pt-20 pb-12 dark:bg-neutral-800">
           <div className="text-center mb-16">
             <FaGraduationCap className="text-6xl text-blue-600 mx-auto mb-6" />
@@ -201,8 +202,17 @@ const Homepage: React.FC = () => {
           </div>
 
           <div className="max-w-3xl mx-auto mb-20">
-            <Form form={questionForm} onFinish={handleSubmit} className="space-y-4">
-              <Form.Item name="question" rules={[{ required: true, message: "Please enter your question" }]}>
+            <Form
+              form={questionForm}
+              onFinish={handleSubmit}
+              className="space-y-4"
+            >
+              <Form.Item
+                name="question"
+                rules={[
+                  { required: true, message: "Please enter your question" },
+                ]}
+              >
                 <Input
                   placeholder="Ask a question about TMV College..."
                   className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
@@ -231,8 +241,7 @@ const Homepage: React.FC = () => {
 
           <div className="w-[90vw] mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Recent Questions 
-
+              Recent Questions
             </h2>
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
               {recentQuestions.map((question: any) => (
@@ -256,7 +265,7 @@ const Homepage: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {question.commentsNum} comments
+                      {question.comments.length} comments
                     </span>
                   </div>
                   <div className="mt-4 mb-4">
@@ -268,7 +277,7 @@ const Homepage: React.FC = () => {
                     AI Answer:
                   </h4>
                   <div
-                    className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[200px] overflow-y-auto
+                    className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[300px] overflow-y-auto
                     [&::-webkit-scrollbar]:w-3
                     [&::-webkit-scrollbar-track]:rounded-full
                     [&::-webkit-scrollbar-track]:bg-gray-50
@@ -277,32 +286,47 @@ const Homepage: React.FC = () => {
                     dark:[&::-webkit-scrollbar-track]:bg-neutral-700
                     dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
                   >
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {question.aiAnswer}
-                    </p>
+                    <p
+                      className="text-black font-sans dark:text-gray-200 tracking-wider p-2 leading-7"
+                      dangerouslySetInnerHTML={{
+                        __html: formatText(question?.aiAnswer),
+                      }}
+                    ></p>
+                    
                   </div>
                   <div className="mt-4">
-                    <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Comments:</h4>
-                    <div className="space-y-2 bg-gray-50 p-6 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[150px] overflow-y-auto
+                    <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                      Comments:
+                    </h4>
+                    <div
+                      className="space-y-2 bg-gray-50 p-6 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[150px] overflow-y-auto
                       [&::-webkit-scrollbar]:w-3
                       [&::-webkit-scrollbar-track]:rounded-full
                       [&::-webkit-scrollbar-track]:bg-gray-50
                       [&::-webkit-scrollbar-thumb]:rounded-full
                       [&::-webkit-scrollbar-thumb]:bg-gray-300
                       dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-
-                      {question.commentsNum !== 0 ? (
+                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+                    >
+                      {question.comments.length > 0 ? (
                         <>
                           {question.comments.map((comment: any) => (
-                            <div key={comment._id} className="flex items-center gap-4">
-                              <Avatar src={comment.avatar} className="w-12 h-12" />
-                              <p className="text-gray-700 dark:text-gray-300 break-words flex-1">{comment.text}</p>
+                            <div
+                              key={comment._id}
+                              className="flex items-center gap-4"
+                            >
+                              <Avatar
+                                src={comment.avatar}
+                                className="w-12 h-12"
+                              />
+                              <p className="text-gray-700 dark:text-gray-200 break-words flex-1">
+                                {comment.text}
+                              </p>
                             </div>
                           ))}
                         </>
                       ) : (
-                        "No comment"
+                        "No comments"
                       )}
                     </div>
                     <Form
@@ -312,7 +336,12 @@ const Homepage: React.FC = () => {
                       <Form.Item name="comment" className="flex-1">
                         <Input
                           value={newComments[question._id] || ""}
-                          onChange={(e) => setNewComments((prev) => ({ ...prev, [question._id]: e.target.value }))}
+                          onChange={(e) =>
+                            setNewComments((prev) => ({
+                              ...prev,
+                              [question._id]: e.target.value,
+                            }))
+                          }
                           placeholder="Add a comment..."
                           className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
                         />
