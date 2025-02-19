@@ -5,10 +5,17 @@ import React, { useState, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import Header from "../Header/Header";
+import { toast } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
+
 
 const { Option } = Select;
 
 const Homepage: React.FC = () => {
+
+
+
+
   const categories = [
     "Semester 1",
     "Semester 2",
@@ -21,6 +28,7 @@ const Homepage: React.FC = () => {
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
   const [newAvatar, setNewAvatar] = useState("");
   const [newName, setNewName] = useState("");
+  const [newAiAnswer,setNewAiAnswer] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Semester 1");
   const [recentQuestions, setRecentQuestions]: any = useState([]);
   const [questionForm] = Form.useForm();
@@ -40,6 +48,41 @@ const Homepage: React.FC = () => {
     }
   };
 
+
+
+  const aiAnswer = async (postId: string, question: string) => {
+    try {
+      if (!postId || !question) {
+        throw new Error("postId and question are required.");
+      }
+  
+      const response = await fetch("/api/post/aianswer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId, question }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate AI answer.");
+      }
+  
+      const data = await response.json();
+      console.log("AI Answer:", data);
+    } catch (error: any) {
+      console.error("Error generating AI answer:", error.message);
+    }
+  };
+
+  
+
+
+
+
+
+
   const handleSubmit = async (values: any) => {
     try {
       const response = await fetch("/api/post/question", {
@@ -58,8 +101,13 @@ const Homepage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("Question posted:", data);
+      console.log("data",data.data);
+      
+      setTimeout(() => {
+        aiAnswer(data.data.id, data.data.question);
+      }, 3000);
       fetchData();
+ 
       questionForm.resetFields();
     } catch (error) {
       console.error("Error posting question:", error);
@@ -68,7 +116,7 @@ const Homepage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [handleSubmit,aiAnswer]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -129,15 +177,23 @@ const Homepage: React.FC = () => {
       fetchData();
       console.log("data : ", data);
       setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset the comment input for this post
+      
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
+
+
+
+
+
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-800">
+                <Toaster position="top-center" />
+        
         <div className="container mx-auto px-4 pt-20 pb-12 dark:bg-neutral-800">
           <div className="text-center mb-16">
             <FaGraduationCap className="text-6xl text-blue-600 mx-auto mb-6" />
@@ -181,7 +237,8 @@ const Homepage: React.FC = () => {
 
           <div className="w-[90vw] mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Recent Questions
+              Recent Questions 
+
             </h2>
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
               {recentQuestions.map((question: any) => (

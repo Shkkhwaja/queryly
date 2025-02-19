@@ -183,22 +183,25 @@ const timeoutId = setTimeout(() => controller.abort(), 10000);
             label="Name"
             name="name"
             rules={[{ required: true, message: "Please enter your Name" }]}
+            
           >
-            <Input placeholder="Your name" />
+            <Input placeholder="Your name" 
+            className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2"/>
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
             rules={[{ required: true, message: "Please enter your email" }]}
+            
           >
-            <Input type="email" placeholder="Your email" />
+            <Input type="email" placeholder="Your email" className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2" />
           </Form.Item>
           <Form.Item
             label="Password"
             name="password"
             rules={[{ required: true, message: "Please enter your password" }]}
           >
-            <Input.Password placeholder="Your password" />
+            <Input.Password placeholder="Your password" className="border-2 border-black focus:border-gray-200 focus:ring focus:ring-gray-200 hover:border-gray-400 transition-colors duration-200 rounded-lg px-4 py-2" />
           </Form.Item>
           <Form.Item
             name="terms"
