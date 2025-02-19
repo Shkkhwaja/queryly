@@ -47,7 +47,7 @@ const Header = () => {
     };
 
     fetchUserDetails();
-  }, []);
+  }, [avatarUrl]);
 
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const Header = () => {
       <div className="absolute flex gap-[3em] right-[5em] top-4">
         <Link href="/profile">
           <Avatar
-            src={avatarUrl}
+            src={avatarUrl === "" ? "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png" : avatarUrl}
             alt="avatar"
             size={35}
             className="cursor-pointer"

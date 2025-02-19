@@ -13,10 +13,7 @@ import { setUserAvatar } from "@/store/userSlice";
 
 const Profile = () => {
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const avatar = useAppSelector((state) => state.user.avatar);
   const [localAvatar, setLocalAvatar] = useState<string>("");
-
   const [data, setData] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [name, setName] = useState<string>("");
@@ -40,7 +37,6 @@ const Profile = () => {
           setName(result.data.name);
           setEmail(result.data.email);
           setLocalAvatar(result.data.avatar);
-          dispatch(setUserAvatar(result.data.avatar));
         } else {
           toast.error("No token found. Please login.");
           setData(null);
@@ -52,7 +48,7 @@ const Profile = () => {
     };
 
     fetchUserDetails();
-  }, [dispatch]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -128,7 +124,7 @@ const Profile = () => {
                 <div className="relative group">
                   {localAvatar ? (
                     <Image
-                    src={localAvatar}
+                    src={localAvatar ||"https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"}
                     alt="User avatar"
                     width={132}
                     height={132}

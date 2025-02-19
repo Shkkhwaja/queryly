@@ -28,7 +28,6 @@ const Homepage: React.FC = () => {
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
   const [newAvatar, setNewAvatar] = useState("");
   const [newName, setNewName] = useState("");
-  const [newAiAnswer,setNewAiAnswer] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Semester 1");
   const [recentQuestions, setRecentQuestions]: any = useState([]);
   const [questionForm] = Form.useForm();
@@ -70,18 +69,13 @@ const Homepage: React.FC = () => {
       }
   
       const data = await response.json();
-      console.log("AI Answer:", data);
+      // console.log("AI Answer:", data);
     } catch (error: any) {
       console.error("Error generating AI answer:", error.message);
     }
   };
 
   
-
-
-
-
-
 
   const handleSubmit = async (values: any) => {
     try {
@@ -101,7 +95,7 @@ const Homepage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("data",data.data);
+      // console.log("data",data.data);
       
       setTimeout(() => {
         aiAnswer(data.data.id, data.data.question);
@@ -175,7 +169,7 @@ const Homepage: React.FC = () => {
 
       const data = await response.json();
       fetchData();
-      console.log("data : ", data);
+      // console.log("data : ", data);
       setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset the comment input for this post
       
     } catch (error) {
