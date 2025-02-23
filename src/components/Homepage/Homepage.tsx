@@ -168,20 +168,35 @@ const Homepage: React.FC = () => {
 
   const formatText = (text: string) => {
     if (!text) return "";
-
+  
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>') // Extra bold
-      .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>') // Bold
+      // Headings (## H2, ### H3)
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
+      
+      // Extra Bold ( **text** )
+      .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
+      
+      // Bold ( *text* )
+      .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
+  
+      // Operators Highlight (`=`, `+=`, `-=`, `/=`, `%=`, `//=`)
       .replace(
         /`(=|\+=|-=|\/=|%=|\/\/=)`/g,
         '<code class="bg-gray-100 dark:bg-gray-800 text-blue-500 p-1 rounded">$1</code>'
-      ) // Highlight only operators
+      )
+  
+      // Inline code (`code`)
       .replace(
         /`([^`]+)`/g,
         '<code class="bg-gray-100 dark:bg-gray-800 p-1 rounded">$1</code>'
-      ) // Inline code without color
-      .replace(/\n/g, "<br>") // Line breaks
+      )
+  
+      // Line Breaks
+      .replace(/\n/g, "<br>");
   };
+  
 
   return (
     <>

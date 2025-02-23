@@ -7,12 +7,14 @@ import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import Link from 'next/link'
 import { useRouter } from "next/navigation";
+import {jwtDecode} from "jwt-decode"
 
 
 
 
 const SigninForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
+  const [google,setGoogle] = useState({})
   const router = useRouter()
   
   const handleSubmitSignin = async (values: any) => {
@@ -47,6 +49,33 @@ const SigninForm: React.FC = () => {
     }
   };
 
+
+
+  const handleGoogleLogin = async (response: any) => {
+    if (response.credential) {
+      const decoded: any = jwtDecode(response.credential);
+  
+      console.log("Decoded Google User:", decoded);
+  
+      const res = await fetch("/api/users/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+  
+      const data = await res.json();
+  
+      if (data.success) {
+        localStorage.setItem("isLoggedIn", "true");
+        router.push("/");
+      } else {
+        console.error("Google Auth Error:", data.error);
+      }
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
 <Toaster
@@ -69,10 +98,7 @@ const SigninForm: React.FC = () => {
         </p>
 
         <div className="mt-4 flex justify-center items-center w-full">
-          <GoogleLogin
-            onSuccess={(response) => console.log("Google login successful: ", response)}
-            onError={() => console.log("Google login failed")}
-          />
+        <GoogleLogin onSuccess={handleGoogleLogin} onError={() => console.error("Google login failed")} />;
         </div>
 
         <div className="flex items-center my-4">

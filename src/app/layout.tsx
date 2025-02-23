@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <GoogleOAuthProvider clientId={process.env.GoogleClientID as string}>
-      <html lang="en">
+<GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+<html lang="en">
         <head>
           <title>Query Hub</title>
           <link rel="icon" href="/queryhub-logo-1.png" type="image/png" />
