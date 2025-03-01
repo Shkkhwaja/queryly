@@ -124,7 +124,7 @@ const Profile = () => {
                 <div className="relative group">
                   {localAvatar ? (
                     <Image
-                    src={localAvatar ||"https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"}
+                    src={localAvatar}
                     alt="User avatar"
                     width={132}
                     height={132}

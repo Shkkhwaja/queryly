@@ -51,10 +51,14 @@ const SigninForm: React.FC = () => {
 
 
 
-  const handleGoogleLogin = async (response: any) => {
-    if (response.credential) {
-      const decoded: any = jwtDecode(response.credential);
+  const handleGoogleLogin = async (credential: any) => {
+    if (!credential) {
+      console.error("Google credential not received");
+      return;
+    }
   
+    try {
+      const decoded: any = jwtDecode(credential);
       console.log("Decoded Google User:", decoded);
   
       const res = await fetch("/api/users/google", {
@@ -62,19 +66,28 @@ const SigninForm: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ credential: response.credential }),
+        body: JSON.stringify({
+          name: decoded.name,
+          email: decoded.email,
+          password: decoded.sub,
+          avatar: decoded.picture, 
+        }),
       });
   
       const data = await res.json();
+      console.log("API Response:", data);
   
-      if (data.success) {
+      if (data?.success) {
         localStorage.setItem("isLoggedIn", "true");
         router.push("/");
       } else {
-        console.error("Google Auth Error:", data.error);
+        console.error("Google Auth Error:", data?.error || "Unknown error");
       }
+    } catch (error) {
+      console.error("Google Login Error:", error);
     }
   };
+  
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
@@ -98,7 +111,10 @@ const SigninForm: React.FC = () => {
         </p>
 
         <div className="mt-4 flex justify-center items-center w-full">
-        <GoogleLogin onSuccess={handleGoogleLogin} onError={() => console.error("Google login failed")} />;
+        <GoogleLogin
+        onSuccess={(response) => handleGoogleLogin(response.credential)}
+        onError={() => console.error("Google login failed")}
+      />
         </div>
 
         <div className="flex items-center my-4">

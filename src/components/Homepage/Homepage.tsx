@@ -194,7 +194,7 @@ const Homepage: React.FC = () => {
       )
   
       // Line Breaks
-      .replace(/\n/g, "<br>");
+      .replace(/\n/g, "<br>")
   };
   
 

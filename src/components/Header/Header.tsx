@@ -42,6 +42,7 @@ const Header = () => {
         if (response.ok) {
           const result = await response.json();
           setAvatarUrl(result.data.avatar);
+        // console.log("header : ",result.data)
         } else {
           console.error("No token found. Please login.");
         }
@@ -71,16 +72,15 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
-    if (avatarUrl === "") {
-      const intervalId = setInterval(() => {
-        toast('Update Avatar!', {
-          icon: '⚠️',
-        });
-      }, 2000); // Show the toast every 2 seconds
+    const timeoutId = setTimeout(() => {
+      if (!avatarUrl) {
+          toast("Update Avatar!", { icon: "⚠️" });
+        }
+    }, 4000); 
   
-      return () => clearInterval(intervalId);
-    }
+    return () => clearTimeout(timeoutId);
   }, [avatarUrl]);
+  
   
   
 
