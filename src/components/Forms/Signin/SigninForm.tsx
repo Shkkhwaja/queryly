@@ -59,7 +59,7 @@ const SigninForm: React.FC = () => {
   
     try {
       const decoded: any = jwtDecode(credential);
-      console.log("Decoded Google User:", decoded);
+      // console.log("Decoded Google User:", decoded);
   
       const res = await fetch("/api/users/google", {
         method: "POST",
@@ -75,7 +75,7 @@ const SigninForm: React.FC = () => {
       });
   
       const data = await res.json();
-      console.log("API Response:", data);
+      // console.log("API Response:", data);
   
       if (data?.success) {
         localStorage.setItem("isLoggedIn", "true");
@@ -105,7 +105,7 @@ const SigninForm: React.FC = () => {
       ></div>
 
       <div className="relative z-10 bg-white shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3 p-8">
-        <h1 className="text-center text-3xl font-bold text-red-600">QueryHub</h1>
+        <h1 className="text-center text-3xl font-bold text-red-600">Queryly</h1>
         <p className="text-center text-gray-700 mt-2">
           A place to share knowledge and better understand the world
         </p>

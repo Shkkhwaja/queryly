@@ -26,10 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-<GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+<GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID!}>
 <html lang="en">
-        <head>
-          <title>Query Hub</title>
+        <head>  
+          <title>Queryly</title>
           <link rel="icon" href="/queryhub-logo-1.png" type="image/png" />
           <script src="./node_modules/preline/dist/preline.js"></script>
         </head>

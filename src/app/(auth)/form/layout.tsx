@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string}>
+    <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID as string}>
       <html lang="en">
         <head>
           <title>Query Hub</title>
