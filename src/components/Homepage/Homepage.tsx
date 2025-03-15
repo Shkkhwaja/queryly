@@ -28,6 +28,8 @@ const Homepage: React.FC = () => {
   const [questionForm] = Form.useForm();
   const [commentForm] = Form.useForm();
 
+
+
   const fetchData = async () => {
     try {
       const response = await fetch("/api/post/question");
@@ -36,8 +38,13 @@ const Homepage: React.FC = () => {
         return;
       }
       const data = await response.json();
-      setRecentQuestions(data);
-      
+  
+      // Sorting by newest questions first (assuming `createdAt` exists)
+      const sortedQuestions = data.sort(
+        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  
+      setRecentQuestions(sortedQuestions);
     } catch (error: any) {
       console.error("Error fetching questions:", error);
     }
@@ -65,7 +72,7 @@ const Homepage: React.FC = () => {
       const data = await response.json();
       // console.log("AI Answer:", data);
     } catch (error: any) {
-      console.error("Error generating AI answer:", error.message);
+      console.error("Error generating AI answer:", error);
     }
   };
 
@@ -264,6 +271,16 @@ const Homepage: React.FC = () => {
                   key={question._id}
                   className="bg-white w-full p-6 rounded-lg shadow-md border border-gray-200 dark:bg-neutral-700 dark:text-white "
                 >
+
+ {/* Date Section */}
+ <p className="text-sm text-gray-500 dark:text-gray-400">
+        {new Date(question.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </p>
+
                   <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-white">
                     {question.question}
                   </h3>
