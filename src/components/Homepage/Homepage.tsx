@@ -7,6 +7,13 @@ import { FaGraduationCap } from "react-icons/fa";
 import Header from "../Header/Header";
 import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css"; // Choose a theme
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-jsx";
+import "prismjs/components/prism-tsx"; // If using TypeScript
+import "prismjs/plugins/line-numbers/prism-line-numbers.css";
+
 
 const { Option } = Select;
 
@@ -27,10 +34,10 @@ const Homepage: React.FC = () => {
   const [recentQuestions, setRecentQuestions]: any = useState([]);
   const [questionForm] = Form.useForm();
   const [commentForm] = Form.useForm();
-
-
+  const [loading,setLoading] = useState(false);
 
   const fetchData = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/post/question");
       if (!response.ok) {
@@ -38,15 +45,20 @@ const Homepage: React.FC = () => {
         return;
       }
       const data = await response.json();
-  
+
       // Sorting by newest questions first (assuming `createdAt` exists)
       const sortedQuestions = data.sort(
-        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-  
+
       setRecentQuestions(sortedQuestions);
+      setLoading(false)
+
     } catch (error: any) {
       console.error("Error fetching questions:", error);
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -105,9 +117,11 @@ const Homepage: React.FC = () => {
     }
   };
 
+
+
   useEffect(() => {
     fetchData();
-  }, [handleSubmit, aiAnswer]);
+  }, []);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -176,33 +190,44 @@ const Homepage: React.FC = () => {
   const formatText = (text: string) => {
     if (!text) return "";
   
-    return text
-      // Headings (## H2, ### H3)
-      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
-      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
-      
-      // Extra Bold ( **text** )
-      .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
-      
-      // Bold ( *text* )
-      .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
+    return (
+      text
+        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
   
-      // Operators Highlight (`=`, `+=`, `-=`, `/=`, `%=`, `//=`)
-      .replace(
-        /`(=|\+=|-=|\/=|%=|\/\/=)`/g,
-        '<code class="bg-gray-100 dark:bg-gray-800 text-blue-500 p-1 rounded">$1</code>'
-      )
+        // Code Blocks
+        .replace(
+          /```([\s\S]+?)```/g,
+          `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
+        )
   
-      // Inline code (`code`)
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-gray-100 dark:bg-gray-800 p-1 rounded">$1</code>'
-      )
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>')
   
-      // Line Breaks
-      .replace(/\n/g, "<br>")
+        // Bold Text
+        .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
+        .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
+  
+        // Blockquotes
+        .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>')
+  
+        // Lists
+        .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
+  
+        // Links
+        .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>')
+  
+        // Line Breaks
+        .replace(/\n/g, "<br>")
+    );
   };
+  
+  
+  useEffect(() => {
+    Prism.highlightAll();
+  }, []);
+  
   
 
   return (
@@ -261,138 +286,152 @@ const Homepage: React.FC = () => {
             </Form>
           </div>
 
-          <div className="w-[90vw] mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Recent Questions
-            </h2>
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
-              {recentQuestions.map((question: any) => (
-                <div
-                  key={question._id}
-                  className="bg-white w-full p-6 rounded-lg shadow-md border border-gray-200 dark:bg-neutral-700 dark:text-white "
-                >
 
- {/* Date Section */}
- <p className="text-sm text-gray-500 dark:text-gray-400">
-        {new Date(question.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
-      </p>
+{
+  loading ? (
+<div className="relative z-10 bg-white dark:bg-neutral-900 shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-[90vw] p-8">
+    <div className="animate-pulse space-y-4">
+  {/* Circle Skeleton */}
+  <div className="flex gap-3">
 
-                  <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-white">
-                    {question.question}
-                  </h3>
+  <div className="h-12 w-12 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+  <div className="h-6 w-[8em] mt-3 bg-gray-300 dark:bg-gray-700 rounded"></div>
+  </div>
 
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={question.author.user.avatar}
-                        alt={question.author.user.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <span className="text-base font-bold text-gray-700 dark:text-white">
-                        {question.author.user.name}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {question.comments.length} comments
-                    </span>
-                  </div>
-                  <div className="mt-4 mb-4">
-                    <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold capitalize">
-                      {question.semester}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-                    AI Answer:
-                  </h4>
-                  <div
-                    className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[300px] overflow-y-auto
-                    [&::-webkit-scrollbar]:w-3
-                    [&::-webkit-scrollbar-track]:rounded-full
-                    [&::-webkit-scrollbar-track]:bg-gray-50
-                    [&::-webkit-scrollbar-thumb]:rounded-full
-                    [&::-webkit-scrollbar-thumb]:bg-gray-300
-                    dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                    dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
-                  >
-                    <p
-                      className="text-black font-sans dark:text-gray-200 tracking-wider p-2 leading-7"
-                      dangerouslySetInnerHTML={{
-                        __html: formatText(question?.aiAnswer),
-                      }}
-                    ></p>
-                    
-                  </div>
-                  <div className="mt-4">
-                    <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-                      Comments:
-                    </h4>
-                    <div
-                      className="space-y-2 bg-gray-50 p-6 rounded-lg border-2 border-gray-300 dark:bg-neutral-800 max-h-[150px] overflow-y-auto
-                      [&::-webkit-scrollbar]:w-3
-                      [&::-webkit-scrollbar-track]:rounded-full
-                      [&::-webkit-scrollbar-track]:bg-gray-50
-                      [&::-webkit-scrollbar-thumb]:rounded-full
-                      [&::-webkit-scrollbar-thumb]:bg-gray-300
-                      dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
-                    >
-                      {question.comments.length > 0 ? (
-                        <>
-                          {question.comments.map((comment: any) => (
-                            <div
-                              key={comment._id}
-                              className="flex items-center gap-4"
-                            >
-                              <Avatar
-                                src={comment.avatar}
-                                className="w-12 h-12"
-                              />
-                              <p className="text-gray-700 dark:text-gray-200 break-words flex-1">
-                                {comment.text}
-                              </p>
-                            </div>
-                          ))}
-                        </>
-                      ) : (
-                        "No comments"
-                      )}
-                    </div>
-                    <Form
-                      onFinish={(values) => handleComment(values, question._id)}
-                      className="mt-4 flex gap-2"
-                    >
-                      <Form.Item name="comment" className="flex-1">
-                        <Input
-                          value={newComments[question._id] || ""}
-                          onChange={(e) =>
-                            setNewComments((prev) => ({
-                              ...prev,
-                              [question._id]: e.target.value,
-                            }))
-                          }
-                          placeholder="Add a comment..."
-                          className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
-                        />
-                      </Form.Item>
-                      <Form.Item>
-                        <Button
-                          htmlType="submit"
-                          icon={<FiSend />}
-                          className="px-6 py-5 text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
-                        >
-                          Send
-                        </Button>
-                      </Form.Item>
-                    </Form>
-                  </div>
-                </div>
-              ))}
+  {/* Other Skeleton Elements */}
+  <div className="h-8 w-3/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
+  <div className="h-6 w-full bg-gray-200 dark:bg-gray-600 rounded"></div>
+  <div className="h-6 w-full bg-gray-200 dark:bg-gray-600 rounded"></div>
+  <div className="h-10 w-full bg-gray-300 dark:bg-gray-700 rounded mt-4"></div>
+</div>
+
+  </div>
+  ) : (
+    <div className="w-[90vw] mx-auto">
+    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-6">
+      Recent Questions
+    </h2>
+    <div className="space-y-6">
+      {recentQuestions.map((question: any) => (
+        <div
+          key={question._id}
+          className="bg-white dark:bg-neutral-900 p-6 rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-neutral-800"
+        >
+          {/* User Info */}
+          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 text-sm mb-3">
+            <img
+              src={question.author.user.avatar}
+              alt={question.author.user.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <div>
+              <p className="font-bold text-gray-900 dark:text-white">
+                {question.author.user.name}
+              </p>
+              <p className="text-xs">
+                {new Date(question.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
             </div>
           </div>
+  
+          {/* Question */}
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+            {question.question} ?
+          </h3>
+  
+          {/* Meta Info */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+              {question.semester}
+            </span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {question.comments.length} Comments
+            </span>
+          </div>
+  
+          {/* AI Answer - More Visible */}
+          <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+              AI Answer:
+            </h4>
+          <div className="relative bg-blue-100 dark:bg-blue-900/30 p-5 rounded-xl border-2 border-blue-400 dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900">
+            
+          <p
+    className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
+    dangerouslySetInnerHTML={{
+      __html: formatText(question?.aiAnswer),
+    }}
+  ></p>
+  
+          </div>
+  
+          {/* Comments Section */}
+          <div className="mt-4">
+            <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+              Comments:
+            </h4>
+            <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
+              {question.comments.length > 0 ? (
+                question.comments.map((comment: any) => (
+                  <div key={comment._id} className="flex items-start gap-3">
+                    <img
+                      src={comment.avatar}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
+                      {comment.text}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No comments yet.
+                </p>
+              )}
+            </div>
+  
+            {/* Comment Input */}
+            <Form onFinish={(values) => handleComment(values, question._id)}
+                        className="mt-4 flex gap-2"
+                      >
+                        <Form.Item name="comment" className="flex-1">
+                          <Input
+                            value={newComments[question._id] || ""}
+                            onChange={(e) =>
+                              setNewComments((prev) => ({
+                                ...prev,
+                                [question._id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Add a comment..."
+                            className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
+                          />
+                        </Form.Item>
+                        <Form.Item>
+                          <Button
+                            htmlType="submit"
+                            icon={<FiSend />}
+                            className="px-6 py-5 text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
+                          >
+                            Send
+                          </Button>
+                        </Form.Item>
+                      </Form>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+  )
+}
+
+
+
+
+
         </div>
       </div>
     </>
