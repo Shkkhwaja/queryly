@@ -13,7 +13,8 @@ import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-jsx";
 import "prismjs/components/prism-tsx"; // If using TypeScript
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
-
+import PageSkeleton from "../Skeleton/PageSkeleton/PageSkeleton";
+import AiSkeleton from "../Skeleton/AiSkeleton/AiSkeleton";
 
 const { Option } = Select;
 
@@ -34,10 +35,12 @@ const Homepage: React.FC = () => {
   const [recentQuestions, setRecentQuestions]: any = useState([]);
   const [questionForm] = Form.useForm();
   const [commentForm] = Form.useForm();
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData:any = async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/post/question");
       if (!response.ok) {
@@ -53,21 +56,23 @@ const Homepage: React.FC = () => {
       );
 
       setRecentQuestions(sortedQuestions);
-      setLoading(false)
-
+      setLoading(false);
     } catch (error: any) {
       console.error("Error fetching questions:", error);
-    }finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
   };
 
+  
+  
   const aiAnswer = async (postId: string, question: string) => {
+    setAiLoading(true);
     try {
       if (!postId || !question) {
         throw new Error("postId and question are required.");
       }
-
+  
       const response = await fetch("/api/post/aianswer", {
         method: "POST",
         headers: {
@@ -75,18 +80,41 @@ const Homepage: React.FC = () => {
         },
         body: JSON.stringify({ postId, question }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to generate AI answer.");
       }
-
+  
       const data = await response.json();
-      // console.log("AI Answer:", data);
+      console.log("AI Answer:", data);
+  
+      // Update the local state with the new AI answer
+      const updatedQuestions = recentQuestions.map((q: any) => {
+        if (q._id === postId) {
+          return {
+            ...q,
+            aiAnswer: data.answer, // Assuming the API returns the AI answer in `data.answer`
+          };
+        }
+        return q;
+      });
+  
+      setRecentQuestions(updatedQuestions); // Update the state
     } catch (error: any) {
       console.error("Error generating AI answer:", error);
+    } finally {
+      setAiLoading(false);
     }
   };
+
+
+
+
+
+
+
+  
 
   const handleSubmit = async (values: any) => {
     try {
@@ -108,7 +136,9 @@ const Homepage: React.FC = () => {
       const data = await response.json();
       // console.log("data",data.data);
 
-      aiAnswer(data.data.id, data.data.question);
+      setTimeout(() => {
+        aiAnswer(data.data.id, data.data.question);
+      }, 5000);
       fetchData();
 
       questionForm.resetFields();
@@ -116,6 +146,7 @@ const Homepage: React.FC = () => {
       console.error("Error posting question:", error);
     }
   };
+
 
 
 
@@ -148,18 +179,21 @@ const Homepage: React.FC = () => {
     fetchUserDetails();
   }, []);
 
+
+
+
   const handleComment = async (values: any, postId: any) => {
     try {
       if (!postId) {
         throw new Error("Post ID is required to post a comment");
       }
-
+  
       const post = recentQuestions.find((q: any) => q._id === postId);
-
+  
       if (!post) {
         throw new Error("No matching post found");
       }
-
+  
       const response = await fetch("/api/post/comment", {
         method: "POST",
         headers: {
@@ -172,63 +206,92 @@ const Homepage: React.FC = () => {
           name: newName,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to post comment");
       }
-
+  
       const data = await response.json();
-      fetchData();
-      // console.log("data : ", data);
+  
+      // Ensure the data object has the required properties
+      const newComment = {
+        _id: data._id, // Ensure the API returns a unique ID for the comment
+        text: values.comment,
+        avatar: newAvatar,
+        name: newName,
+      };
+  
+      // Update the local state with the new comment
+      const updatedQuestions = recentQuestions.map((question: any) => {
+        if (question._id === postId) {
+          return {
+            ...question,
+            comments: [...question.comments, newComment], // Add the new comment to the comments array
+          };
+        }
+        return question;
+      });
+  
+      setRecentQuestions(updatedQuestions); // Update the state
       setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset the comment input for this post
     } catch (error) {
       console.error("Error posting comment:", error);
     }
   };
 
+
+
+
+
   const formatText = (text: string) => {
     if (!text) return "";
-  
+
     return (
       text
         .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
         .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
         .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
-  
+
         // Code Blocks
         .replace(
           /```([\s\S]+?)```/g,
           `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
         )
-  
+
         // Inline code
-        .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>')
-  
+        .replace(
+          /`([^`]+)`/g,
+          '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>'
+        )
+
         // Bold Text
         .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
         .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
-  
+
         // Blockquotes
-        .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>')
-  
+        .replace(
+          /^> (.*$)/gm,
+          '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>'
+        )
+
         // Lists
         .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
-  
+
         // Links
-        .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>')
-  
+        .replace(
+          /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g,
+          '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>'
+        )
+
         // Line Breaks
         .replace(/\n/g, "<br>")
     );
   };
-  
-  
+
   useEffect(() => {
     Prism.highlightAll();
   }, []);
-  
-  
 
   return (
     <>
@@ -286,115 +349,111 @@ const Homepage: React.FC = () => {
             </Form>
           </div>
 
+          {loading ? (
+            <>
+              <PageSkeleton />
+              <PageSkeleton />
+              <PageSkeleton />
+            </>
+          ) : (
+            <div className="w-[90vw] mx-auto">
+              <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-6">
+                Recent Questions
+              </h2>
+              <div className="space-y-6">
+                {recentQuestions.map((question: any) => (
+                  <div
+                    key={question._id}
+                    className="bg-white dark:bg-neutral-900 p-6 rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-neutral-800"
+                  >
+                    {/* User Info */}
+                    <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 text-sm mb-3">
+                      <img
+                        src={question.author.user.avatar}
+                        alt={question.author.user.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-bold text-gray-900 dark:text-white">
+                          {question.author.user.name}
+                        </p>
+                        <p className="text-xs">
+                          {new Date(question.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    </div>
 
-{
-  loading ? (
-<div className="relative z-10 bg-white dark:bg-neutral-900 shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-[90vw] p-8">
-    <div className="animate-pulse space-y-4">
-  {/* Circle Skeleton */}
-  <div className="flex gap-3">
+                    {/* Question */}
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                      {question.question}
+                    </h3>
 
-  <div className="h-12 w-12 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
-  <div className="h-6 w-[8em] mt-3 bg-gray-300 dark:bg-gray-700 rounded"></div>
-  </div>
+                    {/* Meta Info */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+                        {question.semester}
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {question.comments.length} Comments
+                      </span>
+                    </div>
 
-  {/* Other Skeleton Elements */}
-  <div className="h-8 w-3/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
-  <div className="h-6 w-full bg-gray-200 dark:bg-gray-600 rounded"></div>
-  <div className="h-6 w-full bg-gray-200 dark:bg-gray-600 rounded"></div>
-  <div className="h-10 w-full bg-gray-300 dark:bg-gray-700 rounded mt-4"></div>
-</div>
+                    {/* AI Answer - More Visible */}
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                      AI Answer:
+                    </h4>
+                    {aiLoading ? (
+                        <AiSkeleton />
+                    ) : (
+                      <div className="relative bg-transparent dark:bg-blue-900/30 p-5 rounded-xl dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900 rounded-sm shadow-sm ">
+                        <p
+                          className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
+                          dangerouslySetInnerHTML={{
+                            __html: formatText(question?.aiAnswer),
+                          }}
+                        ></p>
+                      </div>
+                    )}
 
-  </div>
-  ) : (
-    <div className="w-[90vw] mx-auto">
-    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-6">
-      Recent Questions
-    </h2>
-    <div className="space-y-6">
-      {recentQuestions.map((question: any) => (
-        <div
-          key={question._id}
-          className="bg-white dark:bg-neutral-900 p-6 rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-neutral-800"
-        >
-          {/* User Info */}
-          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 text-sm mb-3">
-            <img
-              src={question.author.user.avatar}
-              alt={question.author.user.name}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div>
-              <p className="font-bold text-gray-900 dark:text-white">
-                {question.author.user.name}
-              </p>
-              <p className="text-xs">
-                {new Date(question.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          </div>
-  
-          {/* Question */}
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-            {question.question} ?
-          </h3>
-  
-          {/* Meta Info */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
-              {question.semester}
-            </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {question.comments.length} Comments
-            </span>
-          </div>
-  
-          {/* AI Answer - More Visible */}
-          <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
-              AI Answer:
-            </h4>
-          <div className="relative bg-blue-100 dark:bg-blue-900/30 p-5 rounded-xl border-2 border-blue-400 dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900">
-            
-          <p
-    className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
-    dangerouslySetInnerHTML={{
-      __html: formatText(question?.aiAnswer),
-    }}
-  ></p>
-  
-          </div>
-  
-          {/* Comments Section */}
-          <div className="mt-4">
-            <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-              Comments:
-            </h4>
-            <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
-              {question.comments.length > 0 ? (
-                question.comments.map((comment: any) => (
-                  <div key={comment._id} className="flex items-start gap-3">
-                    <img
-                      src={comment.avatar}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
-                      {comment.text}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No comments yet.
-                </p>
-              )}
-            </div>
-  
-            {/* Comment Input */}
-            <Form onFinish={(values) => handleComment(values, question._id)}
+                    {/* Comments Section */}
+                    <div className="mt-4">
+                      <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                        Comments:
+                      </h4>
+                      <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
+                        {question.comments.length > 0 ? (
+                          question.comments.map((comment: any) => (
+                            <div key={comment._id}
+                              className="flex items-start gap-3"
+                            >
+                              <img
+                                src={comment.avatar}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                              <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
+                                {comment.text}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            No comments yet.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Comment Input */}
+                      <Form
+                        onFinish={(values) =>
+                          handleComment(values, question._id)
+                        }
                         className="mt-4 flex gap-2"
                       >
                         <Form.Item name="comment" className="flex-1">
@@ -420,18 +479,12 @@ const Homepage: React.FC = () => {
                           </Button>
                         </Form.Item>
                       </Form>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-  )
-}
-
-
-
-
-
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

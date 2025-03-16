@@ -111,7 +111,7 @@ const Header = () => {
         </Link>
         {/* Toggle Theme Button */}
         <button
-          className=" p-2 rounded-full dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hidden md:block"
+          className=" p-2 rounded-full dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           onClick={toggleTheme}
         >
           {isDarkMode ? <MdLightMode size={24} /> : <MdDarkMode size={24} />}
