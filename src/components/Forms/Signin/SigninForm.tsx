@@ -14,7 +14,6 @@ const SigninForm: React.FC = () => {
   const router = useRouter();
 
   const handleSubmitSignin = async (values: any) => {
-    setSubmitting(true);
     try {
       const response = await fetch("/api/users/login", {
         method: "POST",
@@ -37,8 +36,6 @@ const SigninForm: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error || "Server Error");
-    } finally {
-      setSubmitting(false);
     }
   };
 

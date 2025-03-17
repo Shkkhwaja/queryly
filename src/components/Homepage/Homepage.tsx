@@ -87,20 +87,18 @@ const Homepage: React.FC = () => {
       }
   
       const data = await response.json();
-      console.log("AI Answer:", data);
+      console.log("AI Answer Data:", data); // Debugging: Log the AI answer data
   
-      // Update the local state with the new AI answer
-      const updatedQuestions = recentQuestions.map((q: any) => {
-        if (q._id === postId) {
-          return {
-            ...q,
-            aiAnswer: data.answer, // Assuming the API returns the AI answer in `data.answer`
-          };
-        }
-        return q;
+      // Update the specific question in the `recentQuestions` state
+      setRecentQuestions((prevQuestions: any) => {
+        const updatedQuestions = prevQuestions.map((q: any) =>
+          q._id === postId
+            ? { ...q, aiAnswer: data.data } // Access `data.data` instead of `data.answer`
+            : q
+        );
+        console.log("Updated Questions:", updatedQuestions); // Debugging: Log the updated state
+        return updatedQuestions;
       });
-  
-      setRecentQuestions(updatedQuestions); // Update the state
     } catch (error: any) {
       console.error("Error generating AI answer:", error);
     } finally {
@@ -113,9 +111,7 @@ const Homepage: React.FC = () => {
 
 
 
-
   
-
   const handleSubmit = async (values: any) => {
     try {
       const response = await fetch("/api/post/question", {
@@ -128,19 +124,38 @@ const Homepage: React.FC = () => {
           semester: values.category,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to post question");
       }
-
+  
       const data = await response.json();
-      // console.log("data",data.data);
-
+  
+      // Create a new question object locally
+      const newQuestion = {
+        _id: data.data.id, // Assuming the API returns the ID of the new question
+        question: values.question,
+        semester: values.category,
+        author: {
+          user: {
+            avatar: newAvatar,
+            name: newName,
+          },
+        },
+        createdAt: new Date().toISOString(), // Add a timestamp
+        comments: [], // Initialize with no comments
+        aiAnswer: "", // Initialize with no AI answer
+      };
+  
+      // Update the `recentQuestions` state locally
+      setRecentQuestions((prevQuestions: any) => [newQuestion, ...prevQuestions]);
+  
+      // Generate AI answer after a delay
       setTimeout(() => {
-        aiAnswer(data.data.id, data.data.question);
+        aiAnswer(data.data.id, values.question);
       }, 5000);
-      fetchData();
-
+  
+      // Reset the form fields
       questionForm.resetFields();
     } catch (error) {
       console.error("Error posting question:", error);

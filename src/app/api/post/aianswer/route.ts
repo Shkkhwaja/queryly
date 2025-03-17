@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Types } from 'mongoose';
 import { connectToDB } from "@/dbConnection/dbConnection";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string);
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GOOGLE_API_KEY! as string);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export async function POST(request: NextRequest) {
