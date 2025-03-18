@@ -33,6 +33,8 @@ const Profile = () => {
 
         if (response.ok) {
           const result = await response.json();
+          console.log("response : ",result.data);
+          
           setData(result.data);
           setName(result.data.name);
           setEmail(result.data.email);
