@@ -5,7 +5,7 @@ import React from "react";
 const PageSkeleton: React.FC = () => {
   return (
     <div className="flex justify-center items-center ">
-      <div className="relative z-10 bg-white dark:bg-neutral-900 shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-[90vw] p-8 my-10">
+      <div className="relative z-10 bg-white dark:bg-neutral-900 shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-[90vw] lg:w-[90vw] p-8 my-10">
         <div className="animate-pulse space-y-4">
           {/* Circle Skeleton */}
           <div className="flex gap-3">

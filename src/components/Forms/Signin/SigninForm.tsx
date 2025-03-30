@@ -89,7 +89,6 @@ const SigninForm: React.FC = () => {
       {submitting ? (
         <LoginSkeleton />
 
-
       ) : (
         <div className="relative z-10 bg-white shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3 p-8">
           <h1 className="text-center text-3xl font-bold text-red-600">Queryly</h1>

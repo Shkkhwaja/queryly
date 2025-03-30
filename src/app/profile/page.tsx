@@ -10,6 +10,20 @@ import Image from "next/image";
 import Header from "@/components/Header/Header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUserAvatar } from "@/store/userSlice";
+import UserPost from "@/components/UserPost/UserPost";
+
+
+interface Question {
+  _id: string;
+  question: string;
+  semester: string;
+  createdAt: string;
+  aiAnswer?: string;
+}
+interface Metrics {
+  posts: number;
+  questions: number;
+}
 
 const Profile = () => {
   const router = useRouter();
@@ -19,38 +33,82 @@ const Profile = () => {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [showEmail, setShowEmail] = useState(false);
-  const metrics = { posts: 156, questions: 42 };
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [metrics, setMetrics] = useState<Metrics>({ posts: 0, questions: 0 });
+
+
+  
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
+    const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/users/profile", {
+        setLoadingQuestions(true);
+        
+        // Fetch user profile
+        const userResponse = await fetch("/api/users/profile", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
         });
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log("response : ",result.data);
-          
-          setData(result.data);
-          setName(result.data.name);
-          setEmail(result.data.email);
-          setLocalAvatar(result.data.avatar);
-        } else {
-          toast.error("No token found. Please login.");
-          setData(null);
+  
+        if (!userResponse.ok) {
+          throw new Error("Failed to fetch user profile");
         }
+  
+        const userData = await userResponse.json();
+        
+        setData(userData.data);
+        setName(userData.data.name);
+        setEmail(userData.data.email);
+        setLocalAvatar(userData.data.avatar || "");
+  
+        // Now fetch questions with the user ID
+        await fetchUserQuestions(userData.data._id);
+  
       } catch (error: any) {
-        toast.error("An error occurred. Please try again.");
-        setData(null);
+        toast.error(error.message || "An error occurred");
+        console.error("Fetch error:", error);
+      } finally {
+        setLoadingQuestions(false);
       }
     };
-
-    fetchUserDetails();
+  
+    const fetchUserQuestions = async (userId: string) => {
+      try {
+        const response = await fetch(`/api/post/userquestion/${userId}`);
+        if (response.ok) {
+          const result = await response.json();
+    
+          if (!result.success || !result.data) {
+            throw new Error("Invalid response format");
+          }
+      
+          setQuestions(result.data);
+          setMetrics(prev => ({
+            ...prev,
+            questions: result.data.length
+          }));
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch questions");
+        }
+      } catch (error: any) {
+        console.error("Error fetching questions:", error);
+        toast.error(error.message || "Failed to load questions");
+      }
+    };
+  
+    fetchUserData();
   }, []);
+
+
+  // useEffect(() => {
+  //   console.log("Questions updated:", questions);
+  // }, [questions]); 
+
+
 
   const handleLogout = async () => {
     try {
@@ -208,7 +266,7 @@ const Profile = () => {
             <div className="p-6 sm:p-8 grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <p className="text-3xl font-bold text-blue-500">
-                  {metrics.posts}
+                  {metrics.posts || 0}
                 </p>
                 <p className="text-gray-600 dark:text-gray-400">Posts</p>
               </div>
@@ -222,6 +280,7 @@ const Profile = () => {
           </div>
         </div>
         <Toaster position="top-center" />
+        <UserPost />
       </div>
     </>
   );
