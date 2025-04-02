@@ -154,9 +154,9 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("Updated Cloudinary Avatar:", localAvatar);
-  }, [localAvatar]);
+  // useEffect(() => {
+  //   console.log("Updated Cloudinary Avatar:", localAvatar);
+  // }, [localAvatar]);
 
   return (
     <>
@@ -193,7 +193,7 @@ const Profile = () => {
                   />
                   
                   ) : (
-                    <p>Loading avatar...</p>
+                    <div className="w-[132px] h-[132px] rounded-full bg-gray-300 dark:bg-gray-700 animate-pulse"></div>
                   )}
                   <CldUploadWidget
                     uploadPreset="queryly"
@@ -241,7 +241,7 @@ const Profile = () => {
                       </button>
                     )}
                   </CldUploadWidget>
-                  ;
+                  
                 </div>
 
                 <div className="mt-6 text-center">

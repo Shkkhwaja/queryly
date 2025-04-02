@@ -11,9 +11,11 @@ import LoginSkeleton from "../../Skeleton/LoginSkeleton/LoginSkeleton";
 
 const SigninForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, googleSetSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmitSignin = async (values: any) => {
+    setSubmitting(true)
     try {
       const response = await fetch("/api/users/login", {
         method: "POST",
@@ -36,6 +38,8 @@ const SigninForm: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error || "Server Error");
+    }finally{
+      setSubmitting(false)
     }
   };
 
@@ -44,7 +48,7 @@ const SigninForm: React.FC = () => {
       console.error("Google credential not received");
       return;
     }
-    setSubmitting(true);
+    googleSetSubmitting(true);
     try {
       const decoded: any = jwtDecode(credential);
       const res = await fetch("/api/users/google", {
@@ -69,7 +73,7 @@ const SigninForm: React.FC = () => {
     } catch (error) {
       console.error("Google Login Error:", error);
     }finally {
-      setSubmitting(false);
+      googleSetSubmitting(false);
     }
   };
 
@@ -86,7 +90,7 @@ const SigninForm: React.FC = () => {
         }}
       ></div>
 
-      {submitting ? (
+      {googleSubmitting ? (
         <LoginSkeleton />
 
       ) : (
