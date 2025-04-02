@@ -1,17 +1,20 @@
 import { connectToDB } from "@/dbConnection/dbConnection";
 import postModel from "@/models/postModel";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import mongoose from "mongoose";
 
 connectToDB();
 
 export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } } // Correct typing
+  request: NextRequest,
+  context: { params: { userId: string } }
 ) {
   try {
-    if (!params || !params.userId) {
+    // Ensure params are awaited properly
+    const { userId } = await context.params;
+
+    if (!userId) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
@@ -24,14 +27,14 @@ export async function GET(
       );
     }
 
-    if (requestingUserId !== params.userId) {
+    if (requestingUserId !== userId) {
       return NextResponse.json(
         { error: "Unauthorized: You can only access your own posts" },
         { status: 403 }
       );
     }
 
-    const objectId = new mongoose.Types.ObjectId(params.userId);
+    const objectId = new mongoose.Types.ObjectId(userId);
 
     const posts = await postModel
       .find({ "author.user": objectId })
@@ -39,7 +42,7 @@ export async function GET(
       .populate({
         path: "author.user",
         select: "-password -otp -isVerified",
-        match: { _id: objectId },
+        match: { _id: objectId }, // Ensure user exists
       })
       .lean();
 
