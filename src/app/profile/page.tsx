@@ -39,28 +39,27 @@ const Profile = () => {
 
 
   
+  const fetchUserQuestions = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/post/userquestion/${userId}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.data) {
+        throw new Error(result.error || "Failed to fetch questions");
+      }
+
+      setQuestions(result.data);
+      setMetrics(prev => ({
+        ...prev,
+        questions: result.data.length,
+      }));
+    } catch (error: any) {
+      console.error("Error fetching questions:", error);
+      toast.error(error.message || "Failed to load questions");
+    }
+  };
 
   useEffect(() => {
-    const fetchUserQuestions = async (userId: string) => {
-      try {
-        const response = await fetch(`/api/post/userquestion/${userId}`);
-        const result = await response.json();
-  
-        if (!response.ok || !result.success || !result.data) {
-          throw new Error(result.error || "Failed to fetch questions");
-        }
-  
-        setQuestions(result.data);
-        setMetrics(prev => ({
-          ...prev,
-          questions: result.data.length,
-        }));
-      } catch (error: any) {
-        console.error("Error fetching questions:", error);
-        toast.error(error.message || "Failed to load questions");
-      }
-    };
-  
     const fetchUserData = async () => {
       try {
         setLoadingQuestions(true);
@@ -81,7 +80,7 @@ const Profile = () => {
         setEmail(email);
         setLocalAvatar(avatar || "");
   
-        await fetchUserQuestions(_id);
+        fetchUserQuestions(_id);
       } catch (error: any) {
         toast.error(error.message || "An error occurred");
         console.error("Fetch error:", error);
@@ -93,7 +92,7 @@ const Profile = () => {
     fetchUserData();
   }, []);
   
-
+  
 
   // useEffect(() => {
   //   console.log("Questions updated:", questions);
