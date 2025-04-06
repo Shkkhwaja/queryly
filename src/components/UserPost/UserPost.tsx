@@ -89,6 +89,7 @@ const UserPost: React.FC = () => {
     }
   };
 
+  // Updated handleUpvote function
   const handleUpvote = async (postId: string) => {
     if (!userIdMain) {
       toast.error("Please log in to upvote.");
@@ -96,17 +97,23 @@ const UserPost: React.FC = () => {
     }
 
     const userId = userIdMain;
+
+    // Find the post and check if user already upvoted
     const post = questions.find((q: any) => q._id === postId);
     const alreadyUpvoted = post?.upvotes?.includes(userId);
 
+    // Optimistic UI update
     setUserUpvotes((prev) => ({ ...prev, [postId]: !alreadyUpvoted }));
 
+    
     setQuestions((prev): any =>
       prev.map((q: any) =>
         q._id === postId
           ? {
               ...q,
-              upvotesCount: alreadyUpvoted ? q.upvotesCount - 1 : q.upvotesCount + 1,
+              upvotesCount: alreadyUpvoted
+                ? q.upvotesCount - 1
+                : q.upvotesCount + 1,
               upvotes: alreadyUpvoted
                 ? q.upvotes.filter((id: string) => id !== userId)
                 : [...(q.upvotes || []), userId],
@@ -131,6 +138,7 @@ const UserPost: React.FC = () => {
       console.error("Upvote error:", error);
       toast.error("Failed to update upvote");
 
+      // Rollback UI on failure
       setUserUpvotes((prev) => ({
         ...prev,
         [postId]: !Boolean(alreadyUpvoted),
@@ -141,7 +149,9 @@ const UserPost: React.FC = () => {
           q._id === postId
             ? {
                 ...q,
-                upvotesCount: alreadyUpvoted ? q.upvotesCount + 1 : q.upvotesCount - 1,
+                upvotesCount: alreadyUpvoted
+                  ? q.upvotesCount + 1
+                  : q.upvotesCount - 1,
                 upvotes: alreadyUpvoted
                   ? [...(q.upvotes || []), userId]
                   : q.upvotes.filter((id: string) => id !== userId),

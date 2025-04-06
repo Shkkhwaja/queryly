@@ -39,27 +39,10 @@ const Profile = () => {
 
 
   
-  const fetchUserQuestions = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/post/userquestion/${userId}`);
-      const result = await response.json();
-
-      if (!response.ok || !result.success || !result.data) {
-        throw new Error(result.error || "Failed to fetch questions");
-      }
-
-      setQuestions(result.data);
-      setMetrics(prev => ({
-        ...prev,
-        questions: result.data.length,
-      }));
-    } catch (error: any) {
-      console.error("Error fetching questions:", error);
-      toast.error(error.message || "Failed to load questions");
-    }
-  };
 
   useEffect(() => {
+
+  
     const fetchUserData = async () => {
       try {
         setLoadingQuestions(true);
@@ -92,7 +75,25 @@ const Profile = () => {
     fetchUserData();
   }, []);
   
-  
+  const fetchUserQuestions = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/post/userquestion/${userId}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.data) {
+        throw new Error(result.error || "Failed to fetch questions");
+      }
+
+      setQuestions(result.data);
+      setMetrics(prev => ({
+        ...prev,
+        questions: result.data.length,
+      }));
+    } catch (error: any) {
+      console.error("Error fetching questions:", error);
+      toast.error(error.message || "Failed to load questions");
+    }
+  };
 
   // useEffect(() => {
   //   console.log("Questions updated:", questions);

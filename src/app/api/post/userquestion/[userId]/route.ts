@@ -3,19 +3,22 @@ import type { NextRequest } from "next/server";
 import { connectToDB } from "@/dbConnection/dbConnection";
 import postModel from "@/models/postModel";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
-import mongoose from "mongoose";
-
-connectToDB();
+import mongoose, { Types } from "mongoose";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { userId } = await params;
+    await connectToDB();
 
-    if (!userId) {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    const { userId } = params; 
+
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      return NextResponse.json(
+        { error: "Invalid user ID format" },
+        { status: 400 }
+      );
     }
 
     const requestingUserId = await getDataFromToken(req);
@@ -27,14 +30,14 @@ export async function GET(
       );
     }
 
-    if (requestingUserId !== userId) {
+    if (requestingUserId.toString() !== userId) {
       return NextResponse.json(
         { error: "Unauthorized: You can only access your own posts" },
         { status: 403 }
       );
     }
 
-    const objectId = new mongoose.Types.ObjectId(userId);
+    const objectId = new Types.ObjectId(userId);
 
     const posts = await postModel
       .find({ "author.user": objectId })
@@ -56,12 +59,13 @@ export async function GET(
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching user posts:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to fetch user posts",
+        error: errorMessage || "Failed to fetch user posts",
       },
       { status: 500 }
     );
