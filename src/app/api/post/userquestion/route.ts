@@ -6,15 +6,14 @@ import mongoose from "mongoose";
 
 connectToDB();
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+export async function GET(req: NextRequest) {
   try {
-    const { userId } = await params;
+    // Get userId from query parameters instead of route params
+    const url = new URL(req.url);
+    const userId = url.searchParams.get("userId");
 
     if (!userId) {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
     const requestingUserId = await getDataFromToken(req);

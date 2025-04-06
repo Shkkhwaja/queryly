@@ -315,17 +315,13 @@ const UserPost: React.FC = () => {
         setLoadingQuestions(true);
         const userResponse = await fetch("/api/users/profile", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
-
-        if (!userResponse.ok) {
-          throw new Error("Failed to fetch user profile");
-        }
-
+  
+        if (!userResponse.ok) throw new Error("Failed to fetch user profile");
+        
         const userData = await userResponse.json();
-        await fetchUserQuestions(userData.data._id);
+        await fetchUserQuestions(userData.data._id); // Call the new query param version
       } catch (error: any) {
         toast.error(error.message || "An error occurred");
         console.error("Fetch error:", error);
@@ -333,23 +329,18 @@ const UserPost: React.FC = () => {
         setLoadingQuestions(false);
       }
     };
-
+  
     const fetchUserQuestions = async (userId: string) => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/post/userquestion/${userId}`);
+        const response = await fetch(`/api/post/userquestion?userId=${encodeURIComponent(userId)}`);
+        
         if (response.ok) {
           const result = await response.json();
-
-          if (!result.success || !result.data) {
-            throw new Error("Invalid response format");
-          }
-
+          if (!result.success || !result.data) throw new Error("Invalid response format");
+          
           setQuestions(result.data);
-          setMetrics((prev) => ({
-            ...prev,
-            questions: result.data.length,
-          }));
+          setMetrics((prev) => ({ ...prev, questions: result.data.length }));
         } else {
           const errorData = await response.json();
           throw new Error(errorData.error || "Failed to fetch questions");
@@ -361,7 +352,7 @@ const UserPost: React.FC = () => {
         setLoading(false);
       }
     };
-
+  
     fetchUserData();
   }, []);
 

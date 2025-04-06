@@ -77,18 +77,29 @@ const Profile = () => {
   
   const fetchUserQuestions = async (userId: string) => {
     try {
-      const response = await fetch(`/api/post/userquestion/${userId}`);
-      const result = await response.json();
-
-      if (!response.ok || !result.success || !result.data) {
-        throw new Error(result.error || "Failed to fetch questions");
+      // ✅ Updated: Uses query parameter instead of dynamic route
+      const response = await fetch(`/api/post/userquestion?userId=${encodeURIComponent(userId)}`);
+      
+      // Check if the response is OK (status 200-299)
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch questions");
       }
-
+  
+      const result = await response.json();
+  
+      // Validate response structure
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Invalid response format");
+      }
+  
+      // Update state
       setQuestions(result.data);
       setMetrics(prev => ({
         ...prev,
         questions: result.data.length,
       }));
+  
     } catch (error: any) {
       console.error("Error fetching questions:", error);
       toast.error(error.message || "Failed to load questions");
