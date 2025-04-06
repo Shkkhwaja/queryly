@@ -1,14 +1,17 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { connectToDB } from "@/dbConnection/dbConnection";
 import postModel from "@/models/postModel";
-import { NextResponse, NextRequest } from "next/server";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
 import mongoose from "mongoose";
 
 connectToDB();
 
-export async function GET(req: NextRequest, context: { params: { userId: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { userId: string } }
+) {
   try {
-    const { userId } = await context.params;
+    const { userId } = await params;
 
     if (!userId) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
