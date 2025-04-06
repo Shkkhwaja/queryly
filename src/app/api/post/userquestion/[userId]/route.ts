@@ -1,24 +1,29 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { connectToDB } from "@/dbConnection/dbConnection";
 import postModel from "@/models/postModel";
+import { NextResponse, NextRequest } from "next/server";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+connectToDB();
+
+interface Params {
+  params: {
+    userId: string;
+  };
+}
+
+interface RouteContext {
+  params: {
+    userId: string;
+  };
+}
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    await connectToDB();
+    const { userId } = await context.params;
 
-    const { userId } = params; 
-
-    if (!userId || !Types.ObjectId.isValid(userId)) {
-      return NextResponse.json(
-        { error: "Invalid user ID format" },
-        { status: 400 }
-      );
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const requestingUserId = await getDataFromToken(req);
@@ -30,14 +35,14 @@ export async function GET(
       );
     }
 
-    if (requestingUserId.toString() !== userId) {
+    if (requestingUserId !== userId) {
       return NextResponse.json(
         { error: "Unauthorized: You can only access your own posts" },
         { status: 403 }
       );
     }
 
-    const objectId = new Types.ObjectId(userId);
+    const objectId = new mongoose.Types.ObjectId(userId);
 
     const posts = await postModel
       .find({ "author.user": objectId })
@@ -59,13 +64,12 @@ export async function GET(
       },
       { status: 200 }
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error fetching user posts:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage || "Failed to fetch user posts",
+        error: error.message || "Failed to fetch user posts",
       },
       { status: 500 }
     );
