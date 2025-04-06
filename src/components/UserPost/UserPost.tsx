@@ -14,6 +14,7 @@ const UserPost: React.FC = () => {
     posts: number;
     questions: number;
   }
+  
   type Comment = {
     _id: string;
     text: string;
@@ -27,6 +28,7 @@ const UserPost: React.FC = () => {
     semester: string;
     author: {
       user: {
+        _id: string;
         avatar: string;
         name: string;
       };
@@ -34,13 +36,14 @@ const UserPost: React.FC = () => {
     createdAt: string;
     comments: Comment[];
     aiAnswer?: string;
-    upvotes: string[]; // Array of user IDs
+    upvotes: string[];
     upvotesCount: number;
   }
+
   type UserUpvotes = Record<string, boolean>;
 
   const [userUpvotes, setUserUpvotes] = useState<UserUpvotes>({});
-
+  const [deletingPosts, setDeletingPosts] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
@@ -49,10 +52,43 @@ const UserPost: React.FC = () => {
   const [newAvatar, setNewAvatar] = useState("");
   const [newName, setNewName] = useState("");
   const [metrics, setMetrics] = useState<Metrics>({ posts: 0, questions: 0 });
-    const [userIdMain, setUserIdMain] = useState<string>("");
-  
+  const [userIdMain, setUserIdMain] = useState<string>("");
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  // Updated handleUpvote function
+  const handleDeletePost = async (postId: string) => {
+    setDeletingPosts(prev => ({ ...prev, [postId]: true }));
+    try {
+      const response = await fetch("/api/post/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ postId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete post");
+      }
+
+      toast.success(result.message || "Post deleted successfully");
+      
+      setQuestions(prev => prev.filter(q => q._id !== postId));
+      setMetrics(prev => ({
+        ...prev,
+        questions: prev.questions - 1,
+      }));
+    } catch (error: any) {
+      console.error("Error deleting post:", error);
+      toast.error(error.message || "Failed to delete post");
+    } finally {
+      setDeletingPosts(prev => ({ ...prev, [postId]: false }));
+      setPostToDelete(null);
+    }
+  };
+
   const handleUpvote = async (postId: string) => {
     if (!userIdMain) {
       toast.error("Please log in to upvote.");
@@ -60,12 +96,9 @@ const UserPost: React.FC = () => {
     }
 
     const userId = userIdMain;
-
-    // Find the post and check if user already upvoted
     const post = questions.find((q: any) => q._id === postId);
     const alreadyUpvoted = post?.upvotes?.includes(userId);
 
-    // Optimistic UI update
     setUserUpvotes((prev) => ({ ...prev, [postId]: !alreadyUpvoted }));
 
     setQuestions((prev): any =>
@@ -73,9 +106,7 @@ const UserPost: React.FC = () => {
         q._id === postId
           ? {
               ...q,
-              upvotesCount: alreadyUpvoted
-                ? q.upvotesCount - 1
-                : q.upvotesCount + 1,
+              upvotesCount: alreadyUpvoted ? q.upvotesCount - 1 : q.upvotesCount + 1,
               upvotes: alreadyUpvoted
                 ? q.upvotes.filter((id: string) => id !== userId)
                 : [...(q.upvotes || []), userId],
@@ -100,7 +131,6 @@ const UserPost: React.FC = () => {
       console.error("Upvote error:", error);
       toast.error("Failed to update upvote");
 
-      // Rollback UI on failure
       setUserUpvotes((prev) => ({
         ...prev,
         [postId]: !Boolean(alreadyUpvoted),
@@ -111,9 +141,7 @@ const UserPost: React.FC = () => {
           q._id === postId
             ? {
                 ...q,
-                upvotesCount: alreadyUpvoted
-                  ? q.upvotesCount + 1
-                  : q.upvotesCount - 1,
+                upvotesCount: alreadyUpvoted ? q.upvotesCount + 1 : q.upvotesCount - 1,
                 upvotes: alreadyUpvoted
                   ? [...(q.upvotes || []), userId]
                   : q.upvotes.filter((id: string) => id !== userId),
@@ -139,7 +167,6 @@ const UserPost: React.FC = () => {
           setNewAvatar(result.data.avatar);
           setNewName(result.data.name);
           setUserIdMain(result.data._id);
-          
         } else {
           console.error("No token found. Please login.");
         }
@@ -164,8 +191,6 @@ const UserPost: React.FC = () => {
     }
 
     const tempId = Date.now().toString();
-
-    // Optimistic UI update
     const tempComment: Comment = {
       _id: tempId,
       text: values.comment,
@@ -196,109 +221,88 @@ const UserPost: React.FC = () => {
       if (!response.ok) throw new Error("Failed to post comment");
 
       const data = await response.json();
-      console.log("Comment added:", data);
-
       const savedComment: Comment = {
-        _id: data._id, // Ensure the API returns a valid comment ID
+        _id: data._id,
         text: values.comment,
         avatar: newAvatar,
         name: newName,
       };
 
-      // Update state with the saved comment
       setQuestions((prev: Question[]) =>
         prev.map((q) =>
           q._id === postId
-            ? { ...q, comments: [...(q.comments ?? []), savedComment] }
+            ? { 
+                ...q, 
+                comments: [
+                  ...q.comments.filter(c => c._id !== tempId),
+                  savedComment
+                ] 
+              }
             : q
         )
       );
 
-      setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset input field
+      setNewComments((prev) => ({ ...prev, [postId]: "" }));
     } catch (error) {
       console.error("Error posting comment:", error);
       toast.error("Failed to post comment");
+      setQuestions((prev: Question[]) =>
+        prev.map((q) =>
+          q._id === postId
+            ? { ...q, comments: q.comments.filter(c => c._id !== tempId) }
+            : q
+        )
+      );
     }
   };
+
   const formatText = (text: string) => {
     if (!text) return "";
 
-    return (
-      text
-        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
-        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
-        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
-
-        // Code Blocks
-        .replace(
-          /```([\s\S]+?)```/g,
-          `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
-        )
-
-        // Inline code
-        .replace(
-          /`([^`]+)`/g,
-          '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>'
-        )
-
-        // Bold Text
-        .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
-        .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
-
-        // Blockquotes
-        .replace(
-          /^> (.*$)/gm,
-          '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>'
-        )
-
-        // Lists
-        .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
-
-        // Links
-        .replace(
-          /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g,
-          '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>'
-        )
-
-        // Tables (Handle Markdown tables)
-        .replace(
-          /\|(.+?)\|\n\|(?:-+\|)+\n((?:\|.+?\|\n?)+)/g,
-          (match, headers, rows) => {
-            const headerHtml = `<tr>${(headers as string)
-              .split("|")
-              .map((h) => `<th class="border px-4 py-2">${h.trim()}</th>`)
-              .join("")}</tr>`;
-
-            const rowsHtml = (rows as string)
-              .trim()
-              .split("\n")
-              .map(
-                (row) =>
-                  `<tr>${row
-                    .split("|")
-                    .map(
-                      (cell) =>
-                        `<td class="border px-4 py-2">${cell.trim()}</td>`
-                    )
-                    .join("")}</tr>`
-              )
-              .join("");
-
-            return `<table class="table-auto border-collapse border border-gray-300 w-full text-left">${headerHtml}${rowsHtml}</table>`;
-          }
-        )
-
-        // Line Breaks
-        .replace(/\n/g, "<br>")
-    );
+    return text
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
+      .replace(
+        /```([\s\S]+?)```/g,
+        `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
+      )
+      .replace(
+        /`([^`]+)`/g,
+        '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>'
+      )
+      .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
+      .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
+      .replace(
+        /^> (.*$)/gm,
+        '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>'
+      )
+      .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
+      .replace(
+        /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>'
+      )
+      .replace(
+        /\|(.+?)\|\n\|(?:-+\|)+\n((?:\|.+?\|\n?)+)/g,
+        (match, headers, rows) => {
+          const headerHtml = `<tr>${headers.split("|")
+            .map((h: string) => `<th class="border px-4 py-2">${h.trim()}</th>`)
+            .join("")}</tr>`;
+          const rowsHtml = rows.trim().split("\n")
+            .map((row: string) => `<tr>${row.split("|")
+              .map((cell: string) => `<td class="border px-4 py-2">${cell.trim()}</td>`)
+              .join("")}</tr>`)
+            .join("");
+          return `<table class="table-auto border-collapse border border-gray-300 w-full text-left">${headerHtml}${rowsHtml}</table>`;
+        }
+      )
+      .replace(/\n/g, "<br>");
   };
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoadingQuestions(true);
-
-        // Fetch user profile
         const userResponse = await fetch("/api/users/profile", {
           method: "POST",
           headers: {
@@ -311,8 +315,6 @@ const UserPost: React.FC = () => {
         }
 
         const userData = await userResponse.json();
-
-        // Now fetch questions with the user ID
         await fetchUserQuestions(userData.data._id);
       } catch (error: any) {
         toast.error(error.message || "An error occurred");
@@ -353,12 +355,9 @@ const UserPost: React.FC = () => {
     fetchUserData();
   }, []);
 
-  //   useEffect(() => {
-  //     console.log("Questions updated:", questions);
-  //   }, [questions]);
-
   return (
     <div>
+      <Toaster position="top-center" />
       {loading ? (
         <>
           <PageSkeleton />
@@ -368,7 +367,7 @@ const UserPost: React.FC = () => {
       ) : (
         <div className="w-[90vw] mx-auto">
           <h2 className="text-3xl font-semibold text-gray-900 dark:text-white m-6 mt-10">
-            Your Post's
+            Your Posts
           </h2>
           <div className="space-y-6 mt-[4em]">
             {questions.map((question: any) => (
@@ -376,7 +375,6 @@ const UserPost: React.FC = () => {
                 key={question._id}
                 className="bg-white dark:bg-neutral-900 p-6 rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-neutral-800"
               >
-                {/* User Info */}
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 text-sm mb-3">
                   <img
                     src={question.author.user.avatar}
@@ -388,53 +386,71 @@ const UserPost: React.FC = () => {
                       {question.author.user.name}
                     </p>
                     <p className="text-xs">
-                      {new Date(question.createdAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
+                      {new Date(question.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
                 </div>
 
-                {/* Question */}
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
                   {question.question}
                 </h3>
 
-                {/* Meta Info */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
-                    {question.semester}
-                  </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {question.comments.length} Comments
-                  </span>
-                  {/* Upvote Button */}
-                  <button
-                    onClick={() => handleUpvote(question._id)}
-                    className="flex items-center gap-1 text-sm hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
-                  >
-                    {question.upvotes?.includes(userIdMain) ? (
-                      <FaThumbsUp className="text-base text-blue-500 dark:text-blue-400" />
-                    ) : (
-                      <FiThumbsUp className="text-base text-gray-500 dark:text-gray-400" />
-                    )}
-                    <span>{question.upvotesCount || 0}</span>
-                  </button>
-                </div>
+                <div className="flex justify-between items-center mb-4">
+  <div className="flex items-center gap-2">
+    <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+      {question.semester}
+    </span>
+    <span className="text-sm text-gray-500 dark:text-gray-400">
+      {question.comments.length} Comments
+    </span>
+    <button
+      onClick={() => handleUpvote(question._id)}
+      className="flex items-center gap-1 text-sm hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+    >
+      {question.upvotes?.includes(userIdMain) ? (
+        <FaThumbsUp className="text-base text-blue-500 dark:text-blue-400" />
+      ) : (
+        <FiThumbsUp className="text-base text-gray-500 dark:text-gray-400" />
+      )}
+      <span>{question.upvotesCount || 0}</span>
+    </button>
+  </div>
 
-                {/* AI Answer - More Visible */}
+  {userIdMain === question.author.user._id && (
+    <button
+      onClick={() => setPostToDelete(question._id)}
+      disabled={deletingPosts[question._id]}
+      className={`text-red-500 hover:text-red-700 text-sm flex items-center gap-1 ${
+        deletingPosts[question._id] ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+    >
+      {deletingPosts[question._id] ? (
+        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      )}
+      {deletingPosts[question._id] ? "Deleting..." : "Delete"}
+    </button>
+  )}
+</div>
+
+
                 <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
                   AI Answer:
                 </h4>
                 {aiLoading ? (
                   <AiSkeleton />
                 ) : (
-                  <div className="relative bg-transparent dark:bg-blue-900/30 p-5 rounded-xl dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900 rounded-sm shadow-sm ">
+                  <div className="relative bg-transparent dark:bg-blue-900/30 p-5 rounded-xl dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900 rounded-sm shadow-sm">
                     <p
                       className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
                       dangerouslySetInnerHTML={{
@@ -444,7 +460,6 @@ const UserPost: React.FC = () => {
                   </div>
                 )}
 
-                {/* Comments Section */}
                 <div className="mt-4">
                   <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
                     Comments:
@@ -478,7 +493,6 @@ const UserPost: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Comment Input */}
                   <Form
                     onFinish={(values) => handleComment(values, question?._id)}
                     className="mt-4 flex gap-2"
@@ -502,6 +516,35 @@ const UserPost: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {postToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Delete Post</h3>
+            <p className="mb-6">Are you sure you want to delete this post? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setPostToDelete(null)}
+                className="px-4 py-2 border border-gray-300 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await handleDeletePost(postToDelete);
+                }}
+                disabled={deletingPosts[postToDelete]}
+                className={`px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 ${
+                  deletingPosts[postToDelete] ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {deletingPosts[postToDelete] ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

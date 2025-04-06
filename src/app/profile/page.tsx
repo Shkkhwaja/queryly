@@ -41,32 +41,47 @@ const Profile = () => {
   
 
   useEffect(() => {
+    const fetchUserQuestions = async (userId: string) => {
+      try {
+        const response = await fetch(`/api/post/userquestion/${userId}`);
+        const result = await response.json();
+  
+        if (!response.ok || !result.success || !result.data) {
+          throw new Error(result.error || "Failed to fetch questions");
+        }
+  
+        setQuestions(result.data);
+        setMetrics(prev => ({
+          ...prev,
+          questions: result.data.length,
+        }));
+      } catch (error: any) {
+        console.error("Error fetching questions:", error);
+        toast.error(error.message || "Failed to load questions");
+      }
+    };
+  
     const fetchUserData = async () => {
       try {
         setLoadingQuestions(true);
-        
-        // Fetch user profile
         const userResponse = await fetch("/api/users/profile", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
   
-        if (!userResponse.ok) {
-          throw new Error("Failed to fetch user profile");
-        }
+        if (!userResponse.ok) throw new Error("Failed to fetch user profile");
   
         const userData = await userResponse.json();
-        
+        const { _id, name, email, avatar } = userData.data || {};
+  
+        if (!_id) throw new Error("Invalid user data");
+  
         setData(userData.data);
-        setName(userData.data.name);
-        setEmail(userData.data.email);
-        setLocalAvatar(userData.data.avatar || "");
+        setName(name);
+        setEmail(email);
+        setLocalAvatar(avatar || "");
   
-        // Now fetch questions with the user ID
-        await fetchUserQuestions(userData.data._id);
-  
+        await fetchUserQuestions(_id);
       } catch (error: any) {
         toast.error(error.message || "An error occurred");
         console.error("Fetch error:", error);
@@ -75,33 +90,9 @@ const Profile = () => {
       }
     };
   
-    const fetchUserQuestions = async (userId: string) => {
-      try {
-        const response = await fetch(`/api/post/userquestion/${userId}`);
-        if (response.ok) {
-          const result = await response.json();
-    
-          if (!result.success || !result.data) {
-            throw new Error("Invalid response format");
-          }
-      
-          setQuestions(result.data);
-          setMetrics(prev => ({
-            ...prev,
-            questions: result.data.length
-          }));
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch questions");
-        }
-      } catch (error: any) {
-        console.error("Error fetching questions:", error);
-        toast.error(error.message || "Failed to load questions");
-      }
-    };
-  
     fetchUserData();
   }, []);
+  
 
 
   // useEffect(() => {
@@ -158,6 +149,45 @@ const Profile = () => {
   //   console.log("Updated Cloudinary Avatar:", localAvatar);
   // }, [localAvatar]);
 
+
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const response = await fetch("/api/post/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Important for sending cookies
+        body: JSON.stringify({ postId }),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete post");
+      }
+  
+      toast.success(result.message || "Post deleted successfully");
+      
+      // Refresh the questions list after deletion
+      if (data?._id) {
+        const updatedQuestions = questions.filter(q => q._id !== postId);
+        setQuestions(updatedQuestions);
+        setMetrics(prev => ({
+          ...prev,
+          questions: updatedQuestions.length,
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error deleting post:", error);
+      toast.error(error.message || "Failed to delete post");
+    }
+  };
+
+
+
+
   return (
     <>
       <Header />
@@ -188,7 +218,7 @@ const Profile = () => {
                     alt="User avatar"
                     width={132}
                     height={132}
-                    className="rounded-full object-cover aspect-square border-4 border-white dark:border-gray-700 shadow-lg"
+                    className="rounded-full object-cover aspect-square border-[3px] border-blue-800 dark:border-gray-800 hover:border-blue-400 transition-all duration-300 hover:scale-105"
                     loading="lazy"
                   />
                   
@@ -263,13 +293,7 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p className="text-3xl font-bold text-blue-500">
-                  {metrics.posts || 0}
-                </p>
-                <p className="text-gray-600 dark:text-gray-400">Posts</p>
-              </div>
+            <div className="p-6 sm:p-8 grid grid-cols-1 gap-4">
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <p className="text-3xl font-bold text-blue-500">
                   {metrics.questions}

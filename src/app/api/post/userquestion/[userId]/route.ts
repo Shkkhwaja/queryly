@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     // Ensure params are awaited properly
-    const { userId } = await context.params;
+    const { userId } = context.params;
 
     if (!userId) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
