@@ -2,8 +2,8 @@
 
 import { Avatar, Input, Form, Select, Button } from "antd";
 import React, { useState, useEffect } from "react";
-import { FiSend } from "react-icons/fi";
-import { FaGraduationCap } from "react-icons/fa";
+import { FiSend, FiThumbsUp } from "react-icons/fi";
+import { FaGraduationCap, FaThumbsUp } from "react-icons/fa";
 import Header from "../Header/Header";
 import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
@@ -17,8 +17,31 @@ import PageSkeleton from "../Skeleton/PageSkeleton/PageSkeleton";
 import AiSkeleton from "../Skeleton/AiSkeleton/AiSkeleton";
 
 const { Option } = Select;
-
 const Homepage: React.FC = () => {
+  type UserUpvotes = Record<string, boolean>;
+
+  interface Question {
+    _id: string;
+    question: string;
+    semester: string;
+    author: {
+      user: {
+        avatar: string;
+        name: string;
+      };
+    };
+    createdAt: string;
+    comments: Comment[];
+    aiAnswer?: string;
+    upvotes: string[]; // Array of user IDs
+    upvotesCount: number;
+  }
+  type Comment = {
+    _id: string;
+    text: string;
+    avatar: string;
+    name: string;
+  };
   const categories = [
     "Semester 1",
     "Semester 2",
@@ -28,18 +51,18 @@ const Homepage: React.FC = () => {
     "Semester 6",
   ];
 
+  const [userUpvotes, setUserUpvotes] = useState<UserUpvotes>({});
   const [newComments, setNewComments] = useState<Record<string, string>>({});
   const [currentComment, setCurrentComment] = useState("");
   const [newAvatar, setNewAvatar] = useState("");
   const [newName, setNewName] = useState("");
+  const [userIdMain, setUserIdMain] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState("Semester 1");
-  const [recentQuestions, setRecentQuestions]: any = useState([]);
+  const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
   const [questionForm] = Form.useForm();
   const [commentForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-
-
 
   const fetchData: any = async () => {
     setLoading(true);
@@ -63,6 +86,78 @@ const Homepage: React.FC = () => {
       console.error("Error fetching questions:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Updated handleUpvote function
+  const handleUpvote = async (postId: string) => {
+    if (!userIdMain) {
+      toast.error("Please log in to upvote.");
+      return;
+    }
+
+    const userId = userIdMain;
+
+    // Find the post and check if user already upvoted
+    const post = recentQuestions.find((q: any) => q._id === postId);
+    const alreadyUpvoted = post?.upvotes?.includes(userId);
+
+    // Optimistic UI update
+    setUserUpvotes((prev) => ({ ...prev, [postId]: !alreadyUpvoted }));
+
+    setRecentQuestions((prev): any =>
+      prev.map((q: any) =>
+        q._id === postId
+          ? {
+              ...q,
+              upvotesCount: alreadyUpvoted
+                ? q.upvotesCount - 1
+                : q.upvotesCount + 1,
+              upvotes: alreadyUpvoted
+                ? q.upvotes.filter((id: string) => id !== userId)
+                : [...(q.upvotes || []), userId],
+            }
+          : q
+      )
+    );
+
+    try {
+      const res = await fetch("/api/post/upvote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error("Upvote failed");
+      }
+    } catch (error) {
+      console.error("Upvote error:", error);
+      toast.error("Failed to update upvote");
+
+      // Rollback UI on failure
+      setUserUpvotes((prev) => ({
+        ...prev,
+        [postId]: !Boolean(alreadyUpvoted),
+      }));
+
+      setRecentQuestions((prev): any =>
+        prev.map((q: any) =>
+          q._id === postId
+            ? {
+                ...q,
+                upvotesCount: alreadyUpvoted
+                  ? q.upvotesCount + 1
+                  : q.upvotesCount - 1,
+                upvotes: alreadyUpvoted
+                  ? [...(q.upvotes || []), userId]
+                  : q.upvotes.filter((id: string) => id !== userId),
+              }
+            : q
+        )
+      );
     }
   };
 
@@ -136,9 +231,10 @@ const Homepage: React.FC = () => {
             name: newName,
           },
         },
-        createdAt: new Date().toISOString(), // Add a timestamp
-        comments: [], // Initialize with no comments
-        // aiAnswer: "", // Initialize with no AI answer
+        createdAt: new Date().toISOString(),
+        comments: [],
+        upvotes: [],
+        upvotesCount: 0,
       };
 
       // Update the `recentQuestions` state locally
@@ -175,7 +271,7 @@ const Homepage: React.FC = () => {
           const result = await response.json();
           setNewAvatar(result.data.avatar);
           setNewName(result.data.name);
-          
+          setUserIdMain(result.data._id);
         } else {
           console.error("No token found. Please login.");
         }
@@ -187,38 +283,20 @@ const Homepage: React.FC = () => {
     fetchUserDetails();
   }, []);
 
-  type Comment = {
-    _id: string;
-    text: string;
-    avatar: string;
-    name: string;
-  };
-  
-  type Question = {
-    _id: string;
-    question: string;
-    semester: string;
-    author?: { user?: { avatar: string; name: string } };
-    createdAt?: string;
-    comments: Comment[];
-    aiAnswer?: string;
-  };
-  
-  
   const handleComment = async (values: { comment: string }, postId: string) => {
     if (!postId) {
       toast.error("Post ID is required");
       return;
     }
-  
+
     const post = recentQuestions.find((q: Question) => q._id === postId);
     if (!post) {
       toast.error("No matching post found");
       return;
     }
-  
+
     const tempId = Date.now().toString();
-  
+
     // Optimistic UI update
     const tempComment: Comment = {
       _id: tempId,
@@ -226,7 +304,7 @@ const Homepage: React.FC = () => {
       avatar: newAvatar,
       name: newName,
     };
-  
+
     setRecentQuestions((prev: Question[]) =>
       prev.map((q) =>
         q._id === postId
@@ -234,7 +312,7 @@ const Homepage: React.FC = () => {
           : q
       )
     );
-  
+
     try {
       const response = await fetch("/api/post/comment", {
         method: "POST",
@@ -246,19 +324,19 @@ const Homepage: React.FC = () => {
           name: newName,
         }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to post comment");
-  
+
       const data = await response.json();
       console.log("Comment added:", data);
-  
+
       const savedComment: Comment = {
         _id: data._id, // Ensure the API returns a valid comment ID
         text: values.comment,
         avatar: newAvatar,
         name: newName,
       };
-  
+
       // Update state with the saved comment
       setRecentQuestions((prev: Question[]) =>
         prev.map((q) =>
@@ -267,59 +345,54 @@ const Homepage: React.FC = () => {
             : q
         )
       );
-  
+
       setNewComments((prev) => ({ ...prev, [postId]: "" })); // Reset input field
     } catch (error) {
       console.error("Error posting comment:", error);
       toast.error("Failed to post comment");
     }
   };
-  
-  
-  
-  
-  
 
   const formatText = (text: string) => {
     if (!text) return "";
-  
+
     return (
       text
         .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
         .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
         .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
-  
+
         // Code Blocks
         .replace(
           /```([\s\S]+?)```/g,
           `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
         )
-  
+
         // Inline code
         .replace(
           /`([^`]+)`/g,
           '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>'
         )
-  
+
         // Bold Text
         .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
         .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
-  
+
         // Blockquotes
         .replace(
           /^> (.*$)/gm,
           '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>'
         )
-  
+
         // Lists
         .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
-  
+
         // Links
         .replace(
           /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g,
           '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>'
         )
-  
+
         // Tables (Handle Markdown tables)
         .replace(
           /\|(.+?)\|\n\|(?:-+\|)+\n((?:\|.+?\|\n?)+)/g,
@@ -328,7 +401,7 @@ const Homepage: React.FC = () => {
               .split("|")
               .map((h) => `<th class="border px-4 py-2">${h.trim()}</th>`)
               .join("")}</tr>`;
-        
+
             const rowsHtml = (rows as string)
               .trim()
               .split("\n")
@@ -336,21 +409,22 @@ const Homepage: React.FC = () => {
                 (row) =>
                   `<tr>${row
                     .split("|")
-                    .map((cell) => `<td class="border px-4 py-2">${cell.trim()}</td>`)
+                    .map(
+                      (cell) =>
+                        `<td class="border px-4 py-2">${cell.trim()}</td>`
+                    )
                     .join("")}</tr>`
               )
               .join("");
-        
+
             return `<table class="table-auto border-collapse border border-gray-300 w-full text-left">${headerHtml}${rowsHtml}</table>`;
           }
         )
-        
-  
+
         // Line Breaks
         .replace(/\n/g, "<br>")
     );
   };
-  
 
   useEffect(() => {
     Prism.highlightAll();
@@ -466,6 +540,18 @@ const Homepage: React.FC = () => {
                       <span className="text-sm text-gray-500 dark:text-gray-400">
                         {question.comments.length} Comments
                       </span>
+                      {/* Upvote Button */}
+                      <button
+                        onClick={() => handleUpvote(question._id)}
+                        className="flex items-center gap-1 text-sm hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                      >
+                        {question.upvotes?.includes(userIdMain) ? (
+                          <FaThumbsUp className="text-base text-blue-500 dark:text-blue-400" />
+                        ) : (
+                          <FiThumbsUp className="text-base text-gray-500 dark:text-gray-400" />
+                        )}
+                        <span>{question.upvotesCount || 0}</span>
+                      </button>
                     </div>
 
                     {/* AI Answer - More Visible */}
@@ -486,58 +572,63 @@ const Homepage: React.FC = () => {
                     )}
 
                     {/* Comments Section */}
-<div className="mt-4">
-  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-    Comments:
-  </h4>
-  <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
-    {question?.comments?.length > 0 ? (
-      question.comments.map((comment: any) => (
-        comment?._id && (
-          <div key={comment._id} className="flex items-start gap-3">
-            <img
-              src={
-                comment?.avatar ||
-                "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png"
-              }
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
-              {comment?.text || "No content available"}
-            </p>
-          </div>
-        )
-      ))
-    ) : (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        No comments yet.
-      </p>
-    )}
-  </div>
+                    <div className="mt-4">
+                      <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                        Comments:
+                      </h4>
+                      <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
+                        {question?.comments?.length > 0 ? (
+                          question.comments.map(
+                            (comment: any) =>
+                              comment?._id && (
+                                <div
+                                  key={comment._id}
+                                  className="flex items-start gap-3"
+                                >
+                                  <img
+                                    src={
+                                      comment?.avatar ||
+                                      "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png"
+                                    }
+                                    className="w-8 h-8 rounded-full object-cover"
+                                  />
+                                  <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
+                                    {comment?.text || "No content available"}
+                                  </p>
+                                </div>
+                              )
+                          )
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            No comments yet.
+                          </p>
+                        )}
+                      </div>
 
-  {/* Comment Input */}
-  <Form
-    onFinish={(values) => handleComment(values, question?._id)}
-    className="mt-4 flex gap-2"
-  >
-    <Form.Item name="comment" className="flex-1">
-      <Input
-        placeholder="Add a comment..."
-        className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
-      />
-    </Form.Item>
-    <Form.Item>
-      <Button
-        htmlType="submit"
-        icon={<FiSend />}
-        className="px-6 py-5 text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
-      >
-        Send
-      </Button>
-    </Form.Item>
-  </Form>
-</div>
-
+                      {/* Comment Input */}
+                      <Form
+                        onFinish={(values) =>
+                          handleComment(values, question?._id)
+                        }
+                        className="mt-4 flex gap-2"
+                      >
+                        <Form.Item name="comment" className="flex-1">
+                          <Input
+                            placeholder="Add a comment..."
+                            className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
+                          />
+                        </Form.Item>
+                        <Form.Item>
+                          <Button
+                            htmlType="submit"
+                            icon={<FiSend />}
+                            className="px-6 py-5 text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
+                          >
+                            Send
+                          </Button>
+                        </Form.Item>
+                      </Form>
+                    </div>
                   </div>
                 ))}
               </div>

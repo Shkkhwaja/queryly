@@ -5,11 +5,11 @@ import { Avatar, Input, Form, Select, Button } from "antd";
 import PageSkeleton from "../Skeleton/PageSkeleton/PageSkeleton";
 import AiSkeleton from "../Skeleton/AiSkeleton/AiSkeleton";
 import { toast } from "react-hot-toast";
-import { FiSend } from "react-icons/fi";
+import { FiSend, FiThumbsUp } from "react-icons/fi";
+import { FaGraduationCap, FaThumbsUp } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
 
 const UserPost: React.FC = () => {
-
   interface Metrics {
     posts: number;
     questions: number;
@@ -21,54 +21,135 @@ const UserPost: React.FC = () => {
     name: string;
   };
 
-  type Question = {
+  interface Question {
     _id: string;
     question: string;
     semester: string;
-    author?: { user?: { avatar: string; name: string } };
-    createdAt?: string;
+    author: {
+      user: {
+        avatar: string;
+        name: string;
+      };
+    };
+    createdAt: string;
     comments: Comment[];
     aiAnswer?: string;
-  };
+    upvotes: string[]; // Array of user IDs
+    upvotesCount: number;
+  }
+  type UserUpvotes = Record<string, boolean>;
+
+  const [userUpvotes, setUserUpvotes] = useState<UserUpvotes>({});
 
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [newComments, setNewComments] = useState<Record<string, string>>({});
-    const [newAvatar, setNewAvatar] = useState("");
-    const [newName, setNewName] = useState("");
+  const [newAvatar, setNewAvatar] = useState("");
+  const [newName, setNewName] = useState("");
   const [metrics, setMetrics] = useState<Metrics>({ posts: 0, questions: 0 });
+    const [userIdMain, setUserIdMain] = useState<string>("");
+  
 
+  // Updated handleUpvote function
+  const handleUpvote = async (postId: string) => {
+    if (!userIdMain) {
+      toast.error("Please log in to upvote.");
+      return;
+    }
 
+    const userId = userIdMain;
 
+    // Find the post and check if user already upvoted
+    const post = questions.find((q: any) => q._id === postId);
+    const alreadyUpvoted = post?.upvotes?.includes(userId);
+
+    // Optimistic UI update
+    setUserUpvotes((prev) => ({ ...prev, [postId]: !alreadyUpvoted }));
+
+    setQuestions((prev): any =>
+      prev.map((q: any) =>
+        q._id === postId
+          ? {
+              ...q,
+              upvotesCount: alreadyUpvoted
+                ? q.upvotesCount - 1
+                : q.upvotesCount + 1,
+              upvotes: alreadyUpvoted
+                ? q.upvotes.filter((id: string) => id !== userId)
+                : [...(q.upvotes || []), userId],
+            }
+          : q
+      )
+    );
+
+    try {
+      const res = await fetch("/api/post/upvote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error("Upvote failed");
+      }
+    } catch (error) {
+      console.error("Upvote error:", error);
+      toast.error("Failed to update upvote");
+
+      // Rollback UI on failure
+      setUserUpvotes((prev) => ({
+        ...prev,
+        [postId]: !Boolean(alreadyUpvoted),
+      }));
+
+      setQuestions((prev): any =>
+        prev.map((q: any) =>
+          q._id === postId
+            ? {
+                ...q,
+                upvotesCount: alreadyUpvoted
+                  ? q.upvotesCount + 1
+                  : q.upvotesCount - 1,
+                upvotes: alreadyUpvoted
+                  ? [...(q.upvotes || []), userId]
+                  : q.upvotes.filter((id: string) => id !== userId),
+              }
+            : q
+        )
+      );
+    }
+  };
 
   useEffect(() => {
-      const fetchUserDetails = async () => {
-        try {
-          const response = await fetch("/api/users/profile", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-  
-          if (response.ok) {
-            const result = await response.json();
-            setNewAvatar(result.data.avatar);
-            setNewName(result.data.name);
-            
-          } else {
-            console.error("No token found. Please login.");
-          }
-        } catch (error: any) {
-          console.error("An error occurred. Please try again.");
-        }
-      };
-  
-      fetchUserDetails();
-    }, []);
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch("/api/users/profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
+        if (response.ok) {
+          const result = await response.json();
+          setNewAvatar(result.data.avatar);
+          setNewName(result.data.name);
+          setUserIdMain(result.data._id);
+          
+        } else {
+          console.error("No token found. Please login.");
+        }
+      } catch (error: any) {
+        console.error("An error occurred. Please try again.");
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   const handleComment = async (values: { comment: string }, postId: string) => {
     if (!postId) {
@@ -242,7 +323,7 @@ const UserPost: React.FC = () => {
     };
 
     const fetchUserQuestions = async (userId: string) => {
-        setLoading(true)
+      setLoading(true);
       try {
         const response = await fetch(`/api/post/userquestion/${userId}`);
         if (response.ok) {
@@ -253,9 +334,9 @@ const UserPost: React.FC = () => {
           }
 
           setQuestions(result.data);
-          setMetrics(prev => ({
+          setMetrics((prev) => ({
             ...prev,
-            questions: result.data.length
+            questions: result.data.length,
           }));
         } else {
           const errorData = await response.json();
@@ -264,7 +345,7 @@ const UserPost: React.FC = () => {
       } catch (error: any) {
         console.error("Error fetching questions:", error);
         toast.error(error.message || "Failed to load questions");
-      }finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -272,11 +353,9 @@ const UserPost: React.FC = () => {
     fetchUserData();
   }, []);
 
-
-
-//   useEffect(() => {
-//     console.log("Questions updated:", questions);
-//   }, [questions]);
+  //   useEffect(() => {
+  //     console.log("Questions updated:", questions);
+  //   }, [questions]);
 
   return (
     <div>
@@ -334,6 +413,18 @@ const UserPost: React.FC = () => {
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {question.comments.length} Comments
                   </span>
+                  {/* Upvote Button */}
+                  <button
+                    onClick={() => handleUpvote(question._id)}
+                    className="flex items-center gap-1 text-sm hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                  >
+                    {question.upvotes?.includes(userIdMain) ? (
+                      <FaThumbsUp className="text-base text-blue-500 dark:text-blue-400" />
+                    ) : (
+                      <FiThumbsUp className="text-base text-gray-500 dark:text-gray-400" />
+                    )}
+                    <span>{question.upvotesCount || 0}</span>
+                  </button>
                 </div>
 
                 {/* AI Answer - More Visible */}

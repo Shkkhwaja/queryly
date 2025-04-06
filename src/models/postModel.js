@@ -13,11 +13,14 @@ const postSchema = new mongoose.Schema({
     {
       user: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
       text: { type: String, required: true },
-      avatar:{type:String},
-      name:{type:String}
+      avatar: { type: String },
+      name: { type: String }
     },
   ],
   semester: { type: String, required: true },
+  upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
+  upvotesCount: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now }
 },
 { timestamps: true }
 );
