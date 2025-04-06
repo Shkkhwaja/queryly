@@ -1,24 +1,24 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { connectToDB } from "@/dbConnection/dbConnection";
 import postModel from "@/models/postModel";
-import { NextResponse, NextRequest } from "next/server";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import mongoose from "mongoose";
 
 connectToDB();
 
 export async function GET(
-  request: NextRequest,
-  context: { params: { userId: string } }
+  req: NextRequest,
+  { params }: { params: { userId: string } }
 ) {
   try {
-    // Ensure params are awaited properly
-    const { userId } = context.params;
+    const { userId } = await params;
 
     if (!userId) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const requestingUserId = await getDataFromToken(request);
+    const requestingUserId = await getDataFromToken(req);
 
     if (!requestingUserId) {
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function GET(
       .populate({
         path: "author.user",
         select: "-password -otp -isVerified",
-        match: { _id: objectId }, // Ensure user exists
+        match: { _id: objectId },
       })
       .lean();
 
