@@ -6,19 +6,7 @@ import mongoose from "mongoose";
 
 connectToDB();
 
-interface Params {
-  params: {
-    userId: string;
-  };
-}
-
-interface RouteContext {
-  params: {
-    userId: string;
-  };
-}
-
-export async function GET(req: NextRequest, context: RouteContext) {
+export async function GET(req: NextRequest, context: { params: { userId: string } }) {
   try {
     const { userId } = await context.params;
 
