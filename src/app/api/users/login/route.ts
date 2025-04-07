@@ -17,11 +17,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
 
     const user: any = await userModel.findOne({ email });
     if (!user) {
-      return NextResponse.json({ error: "Email Not exist" }, { status: 400 });
+      return NextResponse.json({ error: "Email not found" }, { status: 400 });
+    }
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return NextResponse.json(
+        { error: "Your account has been blocked. Please contact admin." },
+        { status: 403 }
+      );
     }
 
     // Compare passwords
@@ -30,23 +37,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
 
-    if(!user.isVerified){
-        return NextResponse.json(
-            {error: "Email is not verifiy"},
-            {status: 401}
-        )
-    }
-    const tokenData = {
-        id:user._id,
-        name:user.name,
-        email:user.email
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { error: "Email is not verified" },
+        { status: 401 }
+      );
     }
 
-    // generate token
+    const tokenData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    };
+
     const token = jwt.sign(tokenData, process.env.JWT_SECRET!, {
       expiresIn: "7h",
     });
-    
+
     const response = NextResponse.json({
       message: "Login successful",
       success: true,

@@ -18,6 +18,7 @@ export async function POST(request: Request) {
         password,
         avatar, 
         isVerified: true,
+        isBlocked:true,
       });
 
       await user.save();

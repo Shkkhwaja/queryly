@@ -15,7 +15,7 @@ const SigninForm: React.FC = () => {
   const router = useRouter();
 
   const handleSubmitSignin = async (values: any) => {
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       const response = await fetch("/api/users/login", {
         method: "POST",
@@ -27,21 +27,29 @@ const SigninForm: React.FC = () => {
           password: values.password
         })
       });
-
+  
       const data = await response.json();
+  
       if (response.ok) {
         toast.success("Login Successfully");
         localStorage.setItem("isLoggedIn", "true");
         router.push("/");
       } else {
-        toast.error(data.error || "An error occurred during Login.");
+        if (data.error === "Your account has been blocked. Please contact admin.") {
+          toast.error("Your account is blocked. Contact admin.");
+        } else if (data.error === "Email is not verified") {
+          toast.error("Email not verified. Please verify your email.");
+        } else {
+          toast.error(data.error || "An error occurred during login.");
+        }
       }
     } catch (error: any) {
-      toast.error(error || "Server Error");
-    }finally{
-      setSubmitting(false)
+      toast.error(error?.message || "Server Error");
+    } finally {
+      setSubmitting(false);
     }
   };
+  
 
   const handleGoogleLogin = async (credential: any) => {
     if (!credential) {
