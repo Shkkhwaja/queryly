@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
-  const blockUser = async (id: string) => {
+  const toggleBlockUser = async (id: string) => {
     try {
       const res = await fetch('/api/admin/block-user', {
         method: 'POST',
@@ -47,18 +47,21 @@ const AdminDashboard = () => {
       const data = await res.json();
   
       if (data.success) {
-        setUsers(prev => 
-          prev.map(user => user.id === id ? { ...user, status: data.status } : user)
+        setUsers(prev =>
+          prev.map(user =>
+            user.id === id ? { ...user, status: data.status } : user
+          )
         );
-        toast.success(data.message || 'User status updated');
+        toast.success(data.message || 'User status toggled');
       } else {
-        toast.error(data.message || 'Failed to update user');
+        toast.error(data.message || 'Failed to toggle user');
       }
     } catch (err) {
       toast.error('Something went wrong');
-      console.error("Error blocking user:", err);
+      console.error("Error toggling user status:", err);
     }
   };
+  
   
   const deleteUser = async (id: string) => {
     try {
@@ -82,7 +85,7 @@ const AdminDashboard = () => {
     }
   };
   
-  const verifyUser = async (id: string) => {
+  const toggleVerifyUser = async (id: string) => {
     try {
       const res = await fetch('/api/admin/verify-user', {
         method: 'POST',
@@ -94,17 +97,20 @@ const AdminDashboard = () => {
   
       if (data.success) {
         setUsers(prev =>
-          prev.map(user => user.id === id ? { ...user, verified: data.isVerified } : user)
+          prev.map(user =>
+            user.id === id ? { ...user, verified: data.isVerified } : user
+          )
         );
-        toast.success(data.message || 'Verification updated');
+        toast.success(data.message || 'Verification status updated');
       } else {
-        toast.error(data.message || 'Verification failed');
+        toast.error(data.message || 'Verification update failed');
       }
     } catch (error) {
       toast.error('Something went wrong');
-      console.error('Error verifying user:', error);
+      console.error('Error toggling verification:', error);
     }
   };
+  
   
   const deletePost = async (id: string) => {
     try {
@@ -319,7 +325,7 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-3 flex space-x-2">
                           <button 
-                            onClick={() => blockUser(user.id)}
+                            onClick={() => toggleBlockUser(user.id)}
                             className={`px-3 py-1 rounded ${user.status === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
                           >
                             {user.status === 'active' ? 'Block' : 'Unblock'}
@@ -403,7 +409,7 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-3">
                           <button 
-                            onClick={() => verifyUser(user.id)}
+                            onClick={() => toggleVerifyUser(user.id)}
                             className={`px-3 py-1 rounded ${user.verified ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-purple-500 hover:bg-purple-600'} text-white`}
                           >
                             {user.verified ? 'Unverify' : 'Verify'}
