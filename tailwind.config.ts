@@ -13,6 +13,15 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'sans-serif'],
+        geist: ['var(--font-geist-sans)', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
+        bangers: ['var(--font-bangers)'],
+        atma: ['var(--font-atma)'],
+        lobster: ['var(--font-lobster)'],
+
+      },
     },
   },
   darkMode: "class",

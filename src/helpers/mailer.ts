@@ -92,7 +92,7 @@ export const sendEmail = async({name,email,genotp ,userId}:any) => {
               <p>If you did not create an account, no further action is required. If you have any questions, feel free to contact our support team.</p>
           </div>
           <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} Queryly.co.in. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} queryly.vercel.app All rights reserved.</p>
           </div>
       </div>
   </body>

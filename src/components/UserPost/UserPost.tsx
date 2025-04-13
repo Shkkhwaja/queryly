@@ -367,9 +367,22 @@ const UserPost: React.FC = () => {
         </>
       ) : (
         <div className="w-[90vw] mx-auto">
-          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white m-6 mt-10">
-            Your Posts
-          </h2>
+ <div className="relative w-fit mx-auto my-8">
+  <h2 className="text-4xl font-bold font-atma text-center text-gray-900 dark:text-white">
+    {"Your Post".split("").map((char, i) => (
+      <span
+        key={i}
+        className={`inline-block animate-bounce ${char === " " ? "mx-1" : ""}`}
+        style={{ animationDelay: `${i * 0.1}s` }}
+      >
+        {char}
+      </span>
+    ))}
+  </h2>
+
+  {/* Moving underline */}
+  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-pink-500 to-purple-500 animate-line-move"></span>
+</div>
           <div className="space-y-6 mt-[4em]">
             {questions.map((question: any) => (
               <div

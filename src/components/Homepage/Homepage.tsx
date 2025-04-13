@@ -2,7 +2,7 @@
 
 import { Avatar, Input, Form, Select, Button } from "antd";
 import React, { useState, useEffect } from "react";
-import { FiSend, FiThumbsUp } from "react-icons/fi";
+import { FiSend, FiThumbsUp,FiSearch } from "react-icons/fi";
 import { FaGraduationCap, FaThumbsUp } from "react-icons/fa";
 import Header from "../Header/Header";
 import { toast } from "react-hot-toast";
@@ -63,6 +63,9 @@ const Homepage: React.FC = () => {
   const [commentForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   const fetchData: any = async () => {
     setLoading(true);
@@ -81,13 +84,41 @@ const Homepage: React.FC = () => {
       );
 
       setRecentQuestions(sortedQuestions);
-      setLoading(false);
-    } catch (error: any) {
+      setAllQuestions(sortedQuestions);
+      } catch (error: any) {
       console.error("Error fetching questions:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const highlightSearchText = (text: string, searchQuery: string) => {
+    if (!text || !searchQuery.trim()) return text;
+  
+    try {
+      const regex = new RegExp(`(${escapeRegExp(searchQuery)})`, 'gi');
+      return text.replace(regex, '<span class="bg-yellow-200 dark:bg-yellow-600">$1</span>');
+    } catch (e) {
+      return text; // Return original text if regex fails
+    }
+  };
+  
+  // Helper function to escape regex special characters
+  function escapeRegExp(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Handle search
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setRecentQuestions(allQuestions);
+    } else {
+      const filtered = allQuestions.filter((q) =>
+        q.question.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setRecentQuestions(filtered);
+    }
+  }, [searchQuery, allQuestions]);
 
   // Updated handleUpvote function
   const handleUpvote = async (postId: string) => {
@@ -439,10 +470,10 @@ const Homepage: React.FC = () => {
         <div className="container mx-auto px-4 pt-20 pb-12 dark:bg-neutral-800">
           <div className="text-center mb-16">
             <FaGraduationCap className="text-6xl text-blue-600 mx-auto mb-6" />
-            <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="text-5xl font-bangers -tracking-tight text-gray-900 dark:text-white mb-4">
               Welcome to Queryly
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-2xl -tracking-tight text-gray-800 dark:text-gray-400 max-w-2xl mx-auto font-geist ">
               Your AI-powered Q&A platform for TMV College. Get instant answers
               to your questions.
             </p>
@@ -493,10 +524,43 @@ const Homepage: React.FC = () => {
               <PageSkeleton />
             </>
           ) : (
-            <div className="w-[90vw] mx-auto">
-              <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-6">
-                Recent Questions
-              </h2>
+            <div className="w-[90vw] mx-auto pt-10">
+ <div className="relative w-fit mx-auto mb-6">
+  <h2 className="text-4xl font-bold font-atma text-center text-gray-900 dark:text-white">
+    {"Recent Questions".split("").map((char, i) => (
+      <span
+        key={i}
+        className={`inline-block animate-bounce ${char === " " ? "mx-1" : ""}`}
+        style={{ animationDelay: `${i * 0.1}s` }}
+      >
+        {char}
+      </span>
+    ))}
+  </h2>
+
+  {/* Moving underline */}
+  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-pink-500 to-purple-500 animate-line-move"></span>
+</div>
+
+{/* Search Input */}
+<div className="max-w-3xl mx-auto mb-8 relative">
+              <Input
+                placeholder="Search questions..."
+                prefix={<FiSearch className="text-gray-400" />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
               <div className="space-y-6">
                 {recentQuestions.map((question: any) => (
                   <div
@@ -527,10 +591,13 @@ const Homepage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Question */}
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                      {question.question}
-                    </h3>
+                    {/* Question with highlighted search text */}
+                  <h3 
+                    className="text-lg font-bold text-gray-900 dark:text-white mb-3"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightSearchText(question.question, searchQuery)
+                    }}
+                  ></h3>
 
                     {/* Meta Info */}
                     <div className="flex items-center gap-2 mb-4">

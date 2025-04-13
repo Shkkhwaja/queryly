@@ -103,7 +103,7 @@ const SigninForm: React.FC = () => {
 
       ) : (
         <div className="relative z-10 bg-white shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3 p-8">
-          <h1 className="text-center text-3xl font-bold text-red-600">Queryly</h1>
+          <h1 className="text-center text-4xl font-lobster text-red-600">Queryly</h1>
           <p className="text-center text-gray-700 mt-2">
             A place to share knowledge and better understand the world
           </p>
@@ -151,6 +151,19 @@ const SigninForm: React.FC = () => {
               {submitting ? "Submitting..." : "Login"}
             </Button>
           </Form>
+          <div className="mt-5 text-center text-xs text-gray-500">
+  <p>
+    Your account is either not verified or has been blocked.<br />
+    Please contact the administrator at{" "}
+    <a
+      href="mailto:queryly.co.in@gmail.com?subject=Account%20Verification%20or%20Blocked"
+      className="text-blue-600 underline"
+    >
+      queryly.co.in@gmail.com
+    </a>{" "}
+    for further assistance.
+  </p>
+</div>
 
           <div className="text-center mt-4 text-sm text-gray-600">
             <p>

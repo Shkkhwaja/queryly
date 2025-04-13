@@ -158,7 +158,7 @@ const SignupForm: React.FC = () => {
         }}
       ></div>
       <div className="relative z-10 bg-white shadow-lg rounded-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3 p-8">
-        <h1 className="text-center text-3xl font-bold text-red-600">Queryly</h1>
+        <h1 className="text-center text-4xl font-lobster text-red-600">Queryly</h1>
         <p className="text-center text-gray-700 mt-1">
           A place to share knowledge and better understand the world
         </p>
@@ -243,7 +243,7 @@ const SignupForm: React.FC = () => {
             className="w-full bg-black text-white hover:bg-gray-700 transition-colors duration-200"
             loading={submitting}
           >
-            {submitting ? "Submitting..." : "Login"}
+            {submitting ? "Submitting..." : "Signup"}
           </Button>
         </Form>
         <div className="mt-5 text-center text-xs text-gray-500">
