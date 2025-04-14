@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
     isVerified: { type: Boolean, default: false },
     avatar: { type: String },
     questions: { type: String },
-    isBlocked: { type: Boolean, default: false }  
+    isBlocked: { type: Boolean, default: false },
+  
 }, { timestamps: true });
 
 const userModel = mongoose.models.users || mongoose.model('users', userSchema);

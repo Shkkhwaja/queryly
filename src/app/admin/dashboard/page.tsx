@@ -6,6 +6,9 @@ import {
   FiLogOut, FiMenu, FiX, FiSearch, FiDownload
 } from 'react-icons/fi';
 import { toast, Toaster } from "react-hot-toast";
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+
 
 
 // Types
@@ -36,6 +39,27 @@ const AdminDashboard = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      router.push("/form/adminlogin");
+    }
+  }, []);
+  
+  const handleLogout = () => {
+    
+    Cookies.remove("adminToken")
+    Cookies.remove("isLoggedIn")
+    toast.success('Admin logout successfully');
+
+    // Redirect to the admin login page
+    router.push("/form/adminlogin");
+  };
+  
+  
+
   const toggleBlockUser = async (id: string) => {
     try {
       const res = await fetch('/api/admin/block-user', {
@@ -49,16 +73,21 @@ const AdminDashboard = () => {
       if (data.success) {
         setUsers(prev =>
           prev.map(user =>
-            user.id === id ? { ...user, status: data.status } : user
+            user.id === id
+              ? {
+                  ...user,
+                  status: data.isBlocked ? 'blocked' : 'active',
+                }
+              : user
           )
         );
-        toast.success(data.message || 'User status toggled');
+        toast.success(data.message || 'User block status updated');
       } else {
-        toast.error(data.message || 'Failed to toggle user');
+        toast.error(data.message || 'Block/unblock failed');
       }
-    } catch (err) {
+    } catch (error) {
       toast.error('Something went wrong');
-      console.error("Error toggling user status:", err);
+      console.error('Error toggling block:', error);
     }
   };
   
@@ -146,9 +175,10 @@ const AdminDashboard = () => {
             name: u.name,
             email: u.email,
             joined: new Date(u.createdAt).toLocaleDateString(),
-            status: u.status || "active",
+            status: u.isBlocked ? 'blocked' : 'active',
             verified: u.isVerified,
           })));
+          
         }
   
         const postRes = await fetch("/api/admin/posts");
@@ -240,10 +270,14 @@ const AdminDashboard = () => {
             <FiSettings className="mr-3" />
             {sidebarOpen && (darkMode ? 'Light Mode' : 'Dark Mode')}
           </button>
-          <button className="flex items-center w-full p-3 rounded-lg hover:bg-gray-700">
-            <FiLogOut className="mr-3" />
-            {sidebarOpen && 'Logout'}
-          </button>
+          <button 
+  onClick={handleLogout}
+  className="flex items-center w-full p-3 rounded-lg hover:bg-gray-700"
+>
+  <FiLogOut className="mr-3" />
+  {sidebarOpen && 'Logout'}
+</button>
+
         </div>
       </div>
       
