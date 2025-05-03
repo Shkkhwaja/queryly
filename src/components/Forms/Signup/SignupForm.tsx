@@ -17,11 +17,24 @@ const SignupForm: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState(""); // Store the email to resend OTP
+  const [countdown, setCountdown] = useState(30);
+
 
   // Show OTP Modal
   const showModal = () => {
     setIsModalOpen(true);
+    setCountdown(30); // reset countdown on modal open
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
+  
 
   const handleOk = () => {
     setIsModalOpen(false);
@@ -251,47 +264,57 @@ const SignupForm: React.FC = () => {
         </div>
       </div>
       <Modal
-        title="Verify OTP"
-        open={isModalOpen}
-        footer={null}
-        closable={false}
-        width={400}
-      >
-        <Form
-          name="otpForm"
-          onFinish={handleOtpSubmit}
-          layout="vertical"
-          autoComplete="off"
-        >
-          <Form.Item
-            label="Enter OTP"
-            name="otp"
-            rules={[
-              { required: true, message: "Please enter your OTP." },
-              { len: 6, message: "OTP must be 6 digits." },
-              {
-                pattern: /^[0-9]+$/,
-                message: "OTP must contain numbers only.",
-              },
-            ]}
-          >
-            <OTP length={6} />
-          </Form.Item>
-          <h2
-            className="py-4 text-blue-600 underline cursor-pointer text-left inline-block hover:text-blue-500 "
-            onClick={handleResendOtp}
-          >
-            Resend OTP
-          </h2>
-          <Button
-            htmlType="submit"
-            className="w-full py-2 bg-black text-white"
-            loading={loading}
-          >
-            {loading ? "Verifying..." : "Verify OTP"}
-          </Button>
-        </Form>
-      </Modal>
+  title="Verify OTP"
+  open={isModalOpen}
+  footer={null}
+  closable={false}
+  width={400}
+>
+  <Form
+    name="otpForm"
+    onFinish={handleOtpSubmit}
+    layout="vertical"
+    autoComplete="off"
+  >
+    <Form.Item
+      label="Enter OTP"
+      name="otp"
+      rules={[
+        { required: true, message: "Please enter your OTP." },
+        { len: 6, message: "OTP must be 6 digits." },
+        {
+          pattern: /^[0-9]+$/,
+          message: "OTP must contain numbers only.",
+        },
+      ]}
+    >
+      <OTP length={6} />
+    </Form.Item>
+
+    <p className="text-sm text-gray-600 mb-3">
+      If you don’t see the email in your inbox, please check your spam or junk folder.
+    </p>
+
+    <Button
+      type="link"
+      onClick={handleResendOtp}
+      disabled={countdown > 0}
+      className="px-0"
+    >
+      {countdown > 0 ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+    </Button>
+
+    <Button
+      htmlType="submit"
+      className="w-full py-2 bg-black text-white"
+      loading={loading}
+    >
+      {loading ? "Verifying..." : "Verify OTP"}
+    </Button>
+  </Form>
+</Modal>
+
+
     </div>
   );
 };
