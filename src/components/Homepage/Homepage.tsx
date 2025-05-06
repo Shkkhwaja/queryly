@@ -65,6 +65,8 @@ const Homepage: React.FC = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submitBtnLoading, setSubmitBtnLoading] = useState(false);
+
 
 
   const fetchData: any = async () => {
@@ -233,6 +235,7 @@ const Homepage: React.FC = () => {
   };
 
   const handleSubmit = async (values: any) => {
+    setSubmitBtnLoading(true)
     try {
       const response = await fetch("/api/post/question", {
         method: "POST",
@@ -281,6 +284,8 @@ const Homepage: React.FC = () => {
       questionForm.resetFields();
     } catch (error) {
       console.error("Error posting question:", error);
+    }finally{
+      setSubmitBtnLoading(false)
     }
   };
 
@@ -509,7 +514,7 @@ const Homepage: React.FC = () => {
                 </Form.Item>
 
                 <Form.Item>
-                  <Button type="primary" htmlType="submit" icon={<FiSend />}>
+                  <Button type="primary" htmlType="submit" icon={<FiSend />} loading={submitBtnLoading}>
                     Submit Question
                   </Button>
                 </Form.Item>
@@ -632,7 +637,7 @@ const Homepage: React.FC = () => {
                         <p
                           className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
                           dangerouslySetInnerHTML={{
-                            __html: formatText(question?.aiAnswer),
+                            __html: formatText(question?.aiAnswer ? question?.aiAnswer : "Check The Question you have enter !!"),
                           }}
                         ></p>
                       </div>
