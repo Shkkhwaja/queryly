@@ -11,6 +11,7 @@ import Header from "@/components/Header/Header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUserAvatar } from "@/store/userSlice";
 import UserPost from "@/components/UserPost/UserPost";
+import Footer from "@/components/Footer/Footer";
 
 
 interface Question {
@@ -317,6 +318,7 @@ const Profile = () => {
         <Toaster position="top-center" />
         <UserPost />
       </div>
+      <Footer />
     </>
   );
 };

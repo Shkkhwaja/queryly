@@ -2,7 +2,7 @@
 
 import { Avatar, Input, Form, Select, Button } from "antd";
 import React, { useState, useEffect } from "react";
-import { FiSend, FiThumbsUp,FiSearch } from "react-icons/fi";
+import { FiSend, FiThumbsUp, FiSearch } from "react-icons/fi";
 import { FaGraduationCap, FaThumbsUp } from "react-icons/fa";
 import Header from "../Header/Header";
 import { toast } from "react-hot-toast";
@@ -15,6 +15,7 @@ import "prismjs/components/prism-tsx"; // If using TypeScript
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
 import PageSkeleton from "../Skeleton/PageSkeleton/PageSkeleton";
 import AiSkeleton from "../Skeleton/AiSkeleton/AiSkeleton";
+import Footer from "../Footer/Footer";
 
 const { Option } = Select;
 const Homepage: React.FC = () => {
@@ -66,7 +67,8 @@ const Homepage: React.FC = () => {
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [submitBtnLoading, setSubmitBtnLoading] = useState(false);
-
+  const [visiblePosts, setVisiblePosts] = useState(10);
+  const postsPerLoad = 10;
 
 
   const fetchData: any = async () => {
@@ -79,48 +81,58 @@ const Homepage: React.FC = () => {
       }
       const data = await response.json();
 
-      // Sorting by newest questions first (assuming `createdAt` exists)
+      // Sorting by newest questions first
       const sortedQuestions = data.sort(
         (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
-      setRecentQuestions(sortedQuestions);
-      setAllQuestions(sortedQuestions);
-      } catch (error: any) {
+      setAllQuestions(sortedQuestions); // Store all questions
+      setRecentQuestions(sortedQuestions.slice(0, visiblePosts)); // Initially show only visiblePosts
+    } catch (error: any) {
       console.error("Error fetching questions:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Add this new function to handle loading more posts
+  const loadMorePosts = () => {
+    const newVisiblePosts = visiblePosts + postsPerLoad;
+    setVisiblePosts(newVisiblePosts);
+    setRecentQuestions(allQuestions.slice(0, newVisiblePosts));
+  };
+
   const highlightSearchText = (text: string, searchQuery: string) => {
     if (!text || !searchQuery.trim()) return text;
-  
+
     try {
-      const regex = new RegExp(`(${escapeRegExp(searchQuery)})`, 'gi');
-      return text.replace(regex, '<span class="bg-yellow-200 dark:bg-yellow-600">$1</span>');
+      const regex = new RegExp(`(${escapeRegExp(searchQuery)})`, "gi");
+      return text.replace(
+        regex,
+        '<span class="bg-yellow-200 dark:bg-yellow-600">$1</span>'
+      );
     } catch (e) {
       return text; // Return original text if regex fails
     }
   };
-  
+
   // Helper function to escape regex special characters
   function escapeRegExp(string: string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   // Handle search
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setRecentQuestions(allQuestions);
+      setRecentQuestions(allQuestions.slice(0, visiblePosts));
     } else {
       const filtered = allQuestions.filter((q) =>
         q.question.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setRecentQuestions(filtered);
+      setRecentQuestions(filtered.slice(0, visiblePosts));
     }
-  }, [searchQuery, allQuestions]);
+  }, [searchQuery, allQuestions, visiblePosts]);
 
   // Updated handleUpvote function
   const handleUpvote = async (postId: string) => {
@@ -194,51 +206,49 @@ const Homepage: React.FC = () => {
     }
   };
 
-const aiAnswer = async (postId: string, question: string) => {
-  setAiLoading(true);
-  const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds
+  const aiAnswer = async (postId: string, question: string) => {
+    setAiLoading(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds
 
-  try {
-    if (!postId || !question) {
-      throw new Error("postId and question are required.");
+    try {
+      if (!postId || !question) {
+        throw new Error("postId and question are required.");
+      }
+
+      const response = await fetch("/api/post/aianswer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId, question }),
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate AI answer.");
+      }
+
+      const data = await response.json();
+
+      setRecentQuestions((prevQuestions: any) =>
+        prevQuestions.map((q: any) =>
+          q._id === postId ? { ...q, aiAnswer: data.data } : q
+        )
+      );
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        console.warn("AI answer request aborted due to timeout.");
+      } else {
+        console.error("Error generating AI answer:", error.message);
+      }
+    } finally {
+      setAiLoading(false);
     }
-
-const response = await fetch("/api/post/aianswer", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ postId, question }),
-});
-
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to generate AI answer.");
-    }
-
-    const data = await response.json();
-
-    setRecentQuestions((prevQuestions: any) =>
-      prevQuestions.map((q: any) =>
-        q._id === postId ? { ...q, aiAnswer: data.data } : q
-      )
-    );
-  } catch (error: any) {
-    if (error.name === "AbortError") {
-      console.warn("AI answer request aborted due to timeout.");
-    } else {
-      console.error("Error generating AI answer:", error.message);
-    }
-  } finally {
-    setAiLoading(false);
-  }
-};
-
+  };
 
   const handleSubmit = async (values: any) => {
-    setSubmitBtnLoading(true)
+    setSubmitBtnLoading(true);
     try {
       const response = await fetch("/api/post/question", {
         method: "POST",
@@ -287,8 +297,8 @@ const response = await fetch("/api/post/aianswer", {
       questionForm.resetFields();
     } catch (error) {
       console.error("Error posting question:", error);
-    }finally{
-      setSubmitBtnLoading(false)
+    } finally {
+      setSubmitBtnLoading(false);
     }
   };
 
@@ -517,7 +527,12 @@ const response = await fetch("/api/post/aianswer", {
                 </Form.Item>
 
                 <Form.Item>
-                  <Button type="primary" htmlType="submit" icon={<FiSend />} loading={submitBtnLoading}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<FiSend />}
+                    loading={submitBtnLoading}
+                  >
                     Submit Question
                   </Button>
                 </Form.Item>
@@ -533,41 +548,43 @@ const response = await fetch("/api/post/aianswer", {
             </>
           ) : (
             <div className="w-[90vw] mx-auto pt-10">
- <div className="relative w-fit mx-auto mb-6">
-  <h2 className="text-4xl font-bold font-atma text-center text-gray-900 dark:text-white">
-    {"Recent Questions".split("").map((char, i) => (
-      <span
-        key={i}
-        className={`inline-block animate-bounce ${char === " " ? "mx-1" : ""}`}
-        style={{ animationDelay: `${i * 0.1}s` }}
-      >
-        {char}
-      </span>
-    ))}
-  </h2>
+              <div className="relative w-fit mx-auto mb-6">
+                <h2 className="text-4xl font-bold font-atma text-center text-gray-900 dark:text-white">
+                  {"Recent Questions".split("").map((char, i) => (
+                    <span
+                      key={i}
+                      className={`inline-block animate-bounce ${
+                        char === " " ? "mx-1" : ""
+                      }`}
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </h2>
 
-  {/* Moving underline */}
-  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-pink-500 to-purple-500 animate-line-move"></span>
-</div>
+                {/* Moving underline */}
+                <span className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-pink-500 to-purple-500 animate-line-move"></span>
+              </div>
 
-{/* Search Input */}
-<div className="max-w-3xl mx-auto mb-8 relative">
-              <Input
-                placeholder="Search questions..."
-                prefix={<FiSearch className="text-gray-400" />}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  ×
-                </button>
-              )}
-            </div>
+              {/* Search Input */}
+              <div className="max-w-3xl mx-auto mb-8 relative">
+                <Input
+                  placeholder="Search questions..."
+                  prefix={<FiSearch className="text-gray-400" />}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
 
               <div className="space-y-6">
                 {recentQuestions.map((question: any) => (
@@ -600,12 +617,15 @@ const response = await fetch("/api/post/aianswer", {
                     </div>
 
                     {/* Question with highlighted search text */}
-                  <h3 
-                    className="text-lg font-bold text-gray-900 dark:text-white mb-3"
-                    dangerouslySetInnerHTML={{
-                      __html: highlightSearchText(question.question, searchQuery)
-                    }}
-                  ></h3>
+                    <h3
+                      className="text-lg font-bold text-gray-900 dark:text-white mb-3"
+                      dangerouslySetInnerHTML={{
+                        __html: highlightSearchText(
+                          question.question,
+                          searchQuery
+                        ),
+                      }}
+                    ></h3>
 
                     {/* Meta Info */}
                     <div className="flex items-center gap-2 mb-4">
@@ -640,7 +660,11 @@ const response = await fetch("/api/post/aianswer", {
                         <p
                           className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
                           dangerouslySetInnerHTML={{
-                            __html: formatText(question?.aiAnswer ? question?.aiAnswer : "Check The Question you have enter !!"),
+                            __html: formatText(
+                              question?.aiAnswer
+                                ? question?.aiAnswer
+                                : "Check The Question you have enter !!"
+                            ),
                           }}
                         ></p>
                       </div>
@@ -707,10 +731,22 @@ const response = await fetch("/api/post/aianswer", {
                   </div>
                 ))}
               </div>
+
+              {visiblePosts < allQuestions.length && (
+                <div className="text-center mt-8">
+                  <Button
+                    onClick={loadMorePosts}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors dark:bg-blue-800 dark:hover:bg-blue-700"
+                  >
+                    Load More ({allQuestions.length - visiblePosts} remaining)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 };
