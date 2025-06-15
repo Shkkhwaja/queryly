@@ -194,45 +194,48 @@ const Homepage: React.FC = () => {
     }
   };
 
-  const aiAnswer = async (postId: string, question: string) => {
-    setAiLoading(true);
-    try {
-      if (!postId || !question) {
-        throw new Error("postId and question are required.");
-      }
+const aiAnswer = async (postId: string, question: string) => {
+  setAiLoading(true);
+  const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds
 
-      const response = await fetch("/api/post/aianswer", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ postId, question }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to generate AI answer.");
-      }
-
-      const data = await response.json();
-      console.log("AI Answer Data:", data); // Debugging: Log the AI answer data
-
-      // Update the specific question in the `recentQuestions` state
-      setRecentQuestions((prevQuestions: any) => {
-        const updatedQuestions = prevQuestions.map((q: any) =>
-          q._id === postId
-            ? { ...q, aiAnswer: data.data } // Access `data.data` instead of `data.answer`
-            : q
-        );
-        console.log("Updated Questions:", updatedQuestions); // Debugging: Log the updated state
-        return updatedQuestions;
-      });
-    } catch (error: any) {
-      console.error("Error generating AI answer:", error);
-    } finally {
-      setAiLoading(false);
+  try {
+    if (!postId || !question) {
+      throw new Error("postId and question are required.");
     }
-  };
+
+const response = await fetch("/api/post/aianswer", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ postId, question }),
+});
+
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to generate AI answer.");
+    }
+
+    const data = await response.json();
+
+    setRecentQuestions((prevQuestions: any) =>
+      prevQuestions.map((q: any) =>
+        q._id === postId ? { ...q, aiAnswer: data.data } : q
+      )
+    );
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.warn("AI answer request aborted due to timeout.");
+    } else {
+      console.error("Error generating AI answer:", error.message);
+    }
+  } finally {
+    setAiLoading(false);
+  }
+};
+
 
   const handleSubmit = async (values: any) => {
     setSubmitBtnLoading(true)
