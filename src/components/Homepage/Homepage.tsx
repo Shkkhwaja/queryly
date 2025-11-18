@@ -711,9 +711,10 @@ const Homepage: React.FC = () => {
                         }
                         className="mt-4 flex gap-2"
                       >
-                        <Form.Item name="comment" className="flex-1">
+                        <Form.Item name="comment" className="flex-1" >
                           <Input
                             placeholder="Add a comment..."
+                            required
                             className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
                           />
                         </Form.Item>

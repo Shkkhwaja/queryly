@@ -6,21 +6,7 @@ import mongoose from "mongoose";
 
 connectToDB();
 
-interface UpvoteRequest {
-  postId: string;
-}
-
-interface UpvoteResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  data?: {
-    upvotesCount: number;
-    isUpvoted: boolean;
-  };
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse<UpvoteResponse>> {
+export async function POST(request: NextRequest) {
   try {
     const userId = await getDataFromToken(request);
 
@@ -31,7 +17,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UpvoteRes
       );
     }
 
-    const { postId } = await request.json() as UpvoteRequest;
+    const { postId } = await request.json();
 
     if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
       return NextResponse.json(
@@ -40,59 +26,64 @@ export async function POST(request: NextRequest): Promise<NextResponse<UpvoteRes
       );
     }
 
-    const post = await postModel.findById(postId);
-    if (!post) {
-      return NextResponse.json(
-        { success: false, error: "Post not found" },
-        { status: 404 }
-      );
-    }
-
     const objectUserId = new mongoose.Types.ObjectId(userId);
-    const isUpvoted = post.upvotes.includes(objectUserId);
 
-    // Using transaction for atomic updates
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // ---------- RETRY MECHANISM ----------
+    let attempts = 0;
+    const maxAttempts = 5;
 
-    try {
-      const updatedPost = await postModel.findByIdAndUpdate(
-        postId,
-        isUpvoted
-          ? {
-              $pull: { upvotes: objectUserId },
-              $inc: { upvotesCount: -1 }
-            }
-          : {
-              $addToSet: { upvotes: objectUserId },
-              $inc: { upvotesCount: 1 }
-            },
-        { new: true, session }
-      );
+    while (attempts < maxAttempts) {
+      try {
+        // Fetch post only to check if user already liked
+        const post = await postModel.findById(postId).select("upvotes");
 
-      await session.commitTransaction();
-
-      return NextResponse.json({
-        success: true,
-        message: isUpvoted ? "Upvote removed" : "Upvote added",
-        data: {
-          upvotesCount: updatedPost.upvotesCount,
-          isUpvoted: !isUpvoted
+        if (!post) {
+          return NextResponse.json(
+            { success: false, error: "Post not found" },
+            { status: 404 }
+          );
         }
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
+
+        const isUpvoted = post.upvotes.includes(objectUserId);
+
+        const updateQuery = isUpvoted
+          ? { $pull: { upvotes: objectUserId }, $inc: { upvotesCount: -1 } }
+          : { $addToSet: { upvotes: objectUserId }, $inc: { upvotesCount: 1 } };
+
+        const updatedPost = await postModel.findByIdAndUpdate(
+          postId,
+          updateQuery,
+          { new: true }
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: isUpvoted ? "Upvote removed" : "Upvote added",
+          data: {
+            upvotesCount: updatedPost.upvotesCount,
+            isUpvoted: !isUpvoted,
+          }
+        });
+      } catch (err: any) {
+        // If write conflict happens → retry
+        if (err.code === 112 || err.codeName === "WriteConflict") {
+          attempts++;
+          await new Promise(res => setTimeout(res, 50)); // wait then retry
+          continue;
+        }
+
+        throw err;
+      }
     }
-  } catch (error: any) {
-    console.error("Error handling upvote:", error);
+
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to process upvote"
-      },
+      { success: false, error: "Retry limit exceeded. Try again." },
+      { status: 500 }
+    );
+  } catch (error: any) {
+    console.error("Upvote Error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to process upvote" },
       { status: 500 }
     );
   }
