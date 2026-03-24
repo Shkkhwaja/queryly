@@ -1,13 +1,9 @@
 import postModel from "@/models/postModel";
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Types } from "mongoose";
 import { connectToDB } from "@/dbConnection/dbConnection";
+import axios from "axios";
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GOOGLE_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-// Connect to DB once (avoids re-connecting every request)
 connectToDB();
 
 export async function POST(request: NextRequest) {
@@ -15,25 +11,55 @@ export async function POST(request: NextRequest) {
     const { postId }: { postId: string } = await request.json();
 
     if (!postId || !Types.ObjectId.isValid(postId)) {
-      return NextResponse.json({ error: "Invalid or missing postId" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid postId" }, { status: 400 });
     }
 
-    const post = await postModel.findById(postId).select("question");
+    const post = await postModel.findById(postId).select("question aiAnswer");
+
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Use `generateContentStream` for faster first-byte response (streaming)
-    const result = await model.generateContent(post.question);
-    const text = result.response.text();
+    // ✅ Avoid duplicate API calls (IMPORTANT)
+    if (post.aiAnswer) {
+      return NextResponse.json({ data: post.aiAnswer }, { status: 200 });
+    }
 
+    // 🔥 OpenRouter API Call
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openai/gpt-3.5-turbo", // FREE model
+        messages: [
+          {
+            role: "user",
+            content: post.question,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const text =
+      response.data.choices?.[0]?.message?.content || "No response";
+
+    // Save answer
     post.aiAnswer = text;
     await post.save();
 
     return NextResponse.json({ data: text }, { status: 200 });
 
-  } catch (error) {
-    console.error("AI Answer Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("OpenRouter Error:", error.response?.data || error.message);
+
+    return NextResponse.json( 
+      { error: "Failed to generate AI answer" },
+      { status: 500 }
+    );
   }
 }

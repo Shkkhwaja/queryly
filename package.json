@@ -14,6 +14,7 @@
     "@reduxjs/toolkit": "^2.5.1",
     "ai": "^4.3.16",
     "antd": "^5.23.0",
+    "axios": "^1.13.6",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
