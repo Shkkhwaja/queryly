@@ -70,7 +70,6 @@ const Homepage: React.FC = () => {
   const [visiblePosts, setVisiblePosts] = useState(10);
   const postsPerLoad = 10;
 
-
   const fetchData: any = async () => {
     setLoading(true);
     try {
@@ -110,7 +109,7 @@ const Homepage: React.FC = () => {
       const regex = new RegExp(`(${escapeRegExp(searchQuery)})`, "gi");
       return text.replace(
         regex,
-        '<span class="bg-yellow-200 dark:bg-yellow-600">$1</span>'
+        '<span class="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 px-0.5 rounded-sm">$1</span>'
       );
     } catch (e) {
       return text; // Return original text if regex fails
@@ -407,66 +406,66 @@ const Homepage: React.FC = () => {
 
     return (
       text
-        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold">$1</h3>')
-        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold">$1</h2>')
-        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-extrabold">$1</h1>')
+        .replace(/^### (.*$)/gm, '<h3 class="text-base font-semibold text-gray-900 dark:text-neutral-100 mt-3 mb-1">$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold text-gray-900 dark:text-neutral-50 mt-4 mb-2">$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1 class="text-xl font-extrabold text-gray-900 dark:text-white mt-5 mb-3">$1</h1>')
 
         // Code Blocks
         .replace(
           /```([\s\S]+?)```/g,
-          `<pre class="rounded-lg overflow-x-auto p-3 bg-gray-900 text-white"><code class="language-js">$1</code></pre>`
+          `<pre class="rounded-xl overflow-x-auto p-4 bg-neutral-950 text-neutral-200 text-sm font-mono my-3 shadow-inner"><code class="language-js">$1</code></pre>`
         )
 
         // Inline code
         .replace(
           /`([^`]+)`/g,
-          '<code class="bg-gray-200 text-red-500 p-1 rounded">$1</code>'
+          '<code class="bg-neutral-100 dark:bg-neutral-800 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded font-mono text-sm">$1</code>'
         )
 
         // Bold Text
-        .replace(/\*\*(.*?)\*\*/g, '<span class="font-extrabold">$1</span>')
-        .replace(/\*(.*?)\*/g, '<span class="font-bold">$1</span>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-950 dark:text-white">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="italic text-gray-800 dark:text-neutral-200">$1</em>')
 
         // Blockquotes
         .replace(
           /^> (.*$)/gm,
-          '<blockquote class="border-l-4 border-gray-500 pl-4 italic">$1</blockquote>'
+          '<blockquote class="border-l-4 border-blue-500 bg-blue-50/50 dark:bg-blue-950/10 pl-4 py-1 italic my-2 text-neutral-600 dark:text-neutral-400">$1</blockquote>'
         )
 
         // Lists
-        .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-6">$1</li>')
+        .replace(/^[-*] (.*$)/gm, '<li class="list-disc ml-5 my-1 text-neutral-700 dark:text-neutral-300">$1</li>')
 
         // Links
         .replace(
           /\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g,
-          '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>'
+          '<a href="$2" class="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5 font-medium" target="_blank">$1</a>'
         )
 
         // Tables (Handle Markdown tables)
         .replace(
           /\|(.+?)\|\n\|(?:-+\|)+\n((?:\|.+?\|\n?)+)/g,
           (match, headers, rows) => {
-            const headerHtml = `<tr>${(headers as string)
+            const headerHtml = `<thead class="bg-neutral-50 dark:bg-neutral-800"><tr>${(headers as string)
               .split("|")
-              .map((h) => `<th class="border px-4 py-2">${h.trim()}</th>`)
-              .join("")}</tr>`;
+              .map((h) => `<th class="border border-neutral-200 dark:border-neutral-700 px-4 py-2 text-sm font-semibold">$h.trim()}</th>`)
+              .join("")}</tr></thead>`;
 
-            const rowsHtml = (rows as string)
+            const rowsHtml = `<tbody>${(rows as string)
               .trim()
               .split("\n")
               .map(
                 (row) =>
-                  `<tr>${row
+                  `<tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">${row
                     .split("|")
                     .map(
                       (cell) =>
-                        `<td class="border px-4 py-2">${cell.trim()}</td>`
+                        `<td class="border border-neutral-200 dark:border-neutral-700 px-4 py-2 text-sm">${cell.trim()}</td>`
                     )
                     .join("")}</tr>`
               )
-              .join("");
+              .join("")}</tbody>`;
 
-            return `<table class="table-auto border-collapse border border-gray-300 w-full text-left">${headerHtml}${rowsHtml}</table>`;
+            return `<div class="overflow-x-auto my-4"><table class="table-auto border-collapse border border-neutral-200 dark:border-neutral-700 w-full text-left text-neutral-700 dark:text-neutral-300">${headerHtml}${rowsHtml}</table></div>`;
           }
         )
 
@@ -482,42 +481,48 @@ const Homepage: React.FC = () => {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-800">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 transition-colors duration-200 selection:bg-blue-500/20">
         <Toaster position="top-center" />
 
-        <div className="container mx-auto px-4 pt-20 pb-12 dark:bg-neutral-800">
-          <div className="text-center mb-16">
-            <FaGraduationCap className="text-6xl text-blue-600 mx-auto mb-6" />
-            <h1 className="text-5xl font-bangers -tracking-tight text-gray-900 dark:text-white mb-4">
+        <div className="container mx-auto px-4 pt-28 pb-16 max-w-4xl">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mb-6 shadow-sm border border-blue-100/50 dark:border-blue-900/30">
+              <FaGraduationCap className="text-3xl" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-neutral-900 dark:text-white mb-4">
               Welcome to Queryly
             </h1>
-            <p className="text-2xl -tracking-tight text-gray-800 dark:text-gray-400 max-w-2xl mx-auto font-geist ">
-              Your AI-powered Q&A platform for TMV College. Get instant answers
-              to your questions.
+            <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto leading-relaxed">
+              Your AI-powered Q&A platform for TMV College. Ask questions and get instant, smart architectural breakdowns.
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto mb-20">
+          {/* Form Box */}
+          <div className="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm mb-12">
             <Form
               form={questionForm}
               onFinish={handleSubmit}
+              layout="vertical"
               className="space-y-4"
             >
               <Form.Item
                 name="question"
-                rules={[
-                  { required: true, message: "Please enter your question" },
-                ]}
+                className="mb-3"
+                rules={[{ required: true, message: "Please enter your question" }]}
               >
                 <Input
                   placeholder="Ask a question about TMV College..."
-                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 text-base border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none text-neutral-900 dark:text-white dark:bg-neutral-950 placeholder-neutral-400 transition-all hover:border-neutral-300 dark:hover:border-neutral-700"
                 />
               </Form.Item>
 
-              <div className="flex gap-4">
-                <Form.Item name="category" initialValue={selectedCategory}>
-                  <Select onChange={(value) => setSelectedCategory(value)}>
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                <Form.Item name="category" initialValue={selectedCategory} className="mb-0 flex-1 sm:max-w-[200px]">
+                  <Select 
+                    onChange={(value) => setSelectedCategory(value)}
+                    className="w-full h-11 rounded-xl dark:bg-neutral-950"
+                  >
                     {categories.map((category) => (
                       <Option key={category} value={category}>
                         {category}
@@ -526,12 +531,13 @@ const Homepage: React.FC = () => {
                   </Select>
                 </Form.Item>
 
-                <Form.Item>
+                <Form.Item className="mb-0">
                   <Button
                     type="primary"
                     htmlType="submit"
                     icon={<FiSend />}
                     loading={submitBtnLoading}
+                    className="w-full sm:w-auto h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 border-none text-sm font-medium transition-all shadow-sm flex items-center justify-center gap-2"
                   >
                     Submit Question
                   </Button>
@@ -541,84 +547,77 @@ const Homepage: React.FC = () => {
           </div>
 
           {loading ? (
-            <>
+            <div className="space-y-6">
               <PageSkeleton />
               <PageSkeleton />
               <PageSkeleton />
-            </>
+            </div>
           ) : (
-            <div className="w-[90vw] mx-auto pt-10">
-              <div className="relative w-fit mx-auto mb-6">
-                <h2 className="text-4xl font-bold font-atma text-center text-gray-900 dark:text-white">
-                  {"Recent Questions".split("").map((char, i) => (
-                    <span
-                      key={i}
-                      className={`inline-block animate-bounce ${
-                        char === " " ? "mx-1" : ""
-                      }`}
-                      style={{ animationDelay: `${i * 0.1}s` }}
-                    >
-                      {char}
-                    </span>
-                  ))}
+            <div className="mt-8">
+              {/* Filter Head Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200/60 dark:border-neutral-800/60 pb-5 mb-8">
+                <h2 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                  Recent Questions
+                  <span className="text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded-full font-normal">
+                    {allQuestions.length}
+                  </span>
                 </h2>
 
-                {/* Moving underline */}
-                <span className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-pink-500 to-purple-500 animate-line-move"></span>
+                {/* Inline Search Input */}
+                <div className="relative w-full sm:max-w-xs">
+                  <Input
+                    placeholder="Search questions..."
+                    prefix={<FiSearch className="text-neutral-400 mr-1" />}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-900 dark:text-white dark:bg-neutral-900 placeholder-neutral-400 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-sm"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Search Input */}
-              <div className="max-w-3xl mx-auto mb-8 relative">
-                <Input
-                  placeholder="Search questions..."
-                  prefix={<FiSearch className="text-gray-400" />}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-6 py-4 text-lg border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-black dark:!bg-gray-800 dark:!text-white placeholder-gray-400"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-
+              {/* Feed List Container */}
               <div className="space-y-6">
                 {recentQuestions.map((question: any) => (
                   <div
                     key={question._id}
-                    className="bg-white dark:bg-neutral-900 p-6 rounded-2xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-neutral-800"
+                    className="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-200"
                   >
-                    {/* User Info */}
-                    <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 text-sm mb-3">
-                      <img
-                        src={question.author.user.avatar}
-                        alt={question.author.user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-bold text-gray-900 dark:text-white">
-                          {question.author.user.name}
-                        </p>
-                        <p className="text-xs">
-                          {new Date(question.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </p>
+                    {/* Header Author Line */}
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={question.author.user.avatar}
+                          alt={question.author.user.name}
+                          className="w-9 h-9 rounded-full object-cover ring-2 ring-neutral-100 dark:ring-neutral-800"
+                        />
+                        <div>
+                          <p className="font-semibold text-sm text-neutral-900 dark:text-white leading-tight">
+                            {question.author.user.name}
+                          </p>
+                          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+                            {new Date(question.createdAt).toLocaleDateString(
+                              "en-US",
+                              { year: "numeric", month: "short", day: "numeric" }
+                            )}
+                          </p>
+                        </div>
                       </div>
+                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-lg border border-blue-100/50 dark:border-blue-900/20">
+                        {question.semester}
+                      </span>
                     </div>
 
-                    {/* Question with highlighted search text */}
+                    {/* Question Title Text */}
                     <h3
-                      className="text-lg font-bold text-gray-900 dark:text-white mb-3"
+                      className="text-lg font-bold text-neutral-900 dark:text-white mb-4 leading-snug"
                       dangerouslySetInnerHTML={{
                         __html: highlightSearchText(
                           question.question,
@@ -627,102 +626,111 @@ const Homepage: React.FC = () => {
                       }}
                     ></h3>
 
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
-                        {question.semester}
-                      </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {question.comments.length} Comments
-                      </span>
-                      {/* Upvote Button */}
+                    {/* Meta Interaction Items Bar */}
+                    <div className="flex items-center gap-4 border-b border-neutral-100 dark:border-neutral-800 pb-4 mb-4 text-neutral-500 dark:text-neutral-400">
                       <button
                         onClick={() => handleUpvote(question._id)}
-                        className="flex items-center gap-1 text-sm hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
                       >
                         {question.upvotes?.includes(userIdMain) ? (
-                          <FaThumbsUp className="text-base text-blue-500 dark:text-blue-400" />
+                          <FaThumbsUp className="text-sm text-blue-600 dark:text-blue-400" />
                         ) : (
-                          <FiThumbsUp className="text-base text-gray-500 dark:text-gray-400" />
+                          <FiThumbsUp className="text-sm text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                         )}
-                        <span>{question.upvotesCount || 0}</span>
+                        <span>{question.upvotesCount || 0} Upvotes</span>
                       </button>
+                      <span className="text-xs text-neutral-300 dark:text-neutral-700">|</span>
+                      <span className="text-xs font-medium">
+                        {question.comments.length} Comments
+                      </span>
                     </div>
 
-                    {/* AI Answer - More Visible */}
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                      AI Answer:
-                    </h4>
-                    {aiLoading ? (
-                      <AiSkeleton />
-                    ) : (
-                      <div className="relative bg-transparent dark:bg-blue-900/30 p-5 rounded-xl dark:border-blue-500 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-200 dark:scrollbar-thumb-blue-600 dark:scrollbar-track-blue-900 rounded-sm shadow-sm ">
-                        <p
-                          className="text-gray-900 dark:text-gray-200 font-medium tracking-wide leading-relaxed"
-                          dangerouslySetInnerHTML={{
-                            __html: formatText(
-                              question?.aiAnswer
-                                ? question?.aiAnswer
-                                : "Check The Question you have enter !!"
-                            ),
-                          }}
-                        ></p>
+                    {/* AI Smart Insight Answer Block */}
+                    <div className="mb-6 bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-200/50 dark:border-neutral-800/60 p-4 rounded-xl">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                          AI Answer Insight
+                        </h4>
                       </div>
-                    )}
+                      
+                      {aiLoading ? (
+                        <AiSkeleton />
+                      ) : (
+                        <div className="max-h-[280px] overflow-y-auto pr-1 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
+                          <p
+                            className="space-y-2"
+                            dangerouslySetInnerHTML={{
+                              __html: formatText(
+                                question?.aiAnswer
+                                  ? question?.aiAnswer
+                                  : "Check The Question you have enter !!"
+                              ),
+                            }}
+                          ></p>
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Comments Section */}
-                    <div className="mt-4">
-                      <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-                        Comments:
+                    {/* Context Comments Tree Section */}
+                    <div className="mt-4 pt-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-3">
+                        Discussion Thread
                       </h4>
-                      <div className="space-y-3 bg-transparent max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-neutral-700">
+                      
+                      <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
                         {question?.comments?.length > 0 ? (
                           question.comments.map(
                             (comment: any) =>
                               comment?._id && (
                                 <div
                                   key={comment._id}
-                                  className="flex items-start gap-3"
-                                >
+                                  className="flex items-start gap-2.5 text-sm"
+                                strat-clean-comment>
                                   <img
                                     src={
                                       comment?.avatar ||
                                       "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png"
                                     }
-                                    className="w-8 h-8 rounded-full object-cover"
+                                    className="w-7 h-7 rounded-full object-cover mt-0.5 ring-1 ring-neutral-100 dark:ring-neutral-800"
                                   />
-                                  <p className="text-gray-700 dark:text-gray-300 text-[15px] flex-1 bg-gray-100 dark:bg-neutral-900 p-3 rounded-lg">
-                                    {comment?.text || "No content available"}
-                                  </p>
+                                  <div className="flex-1 bg-neutral-50 dark:bg-neutral-950 p-3 rounded-xl border border-neutral-200/30 dark:border-neutral-800/30">
+                                    <p className="font-semibold text-xs text-neutral-900 dark:text-neutral-200 mb-0.5">
+                                      {comment?.name || "Anonymous User"}
+                                    </p>
+                                    <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-normal">
+                                      {comment?.text || "No content available"}
+                                    </p>
+                                  </div>
                                 </div>
                               )
                           )
                         ) : (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            No comments yet.
+                          <p className="text-xs italic text-neutral-400 dark:text-neutral-500 pl-1">
+                            No comments submitted to this thread yet.
                           </p>
                         )}
                       </div>
 
-                      {/* Comment Input */}
+                      {/* Comment Submission Unit Form */}
                       <Form
                         onFinish={(values) =>
                           handleComment(values, question?._id)
                         }
-                        className="mt-4 flex gap-2"
+                        className="mt-4 flex items-center gap-2"
                       >
-                        <Form.Item name="comment" className="flex-1" >
+                        <Form.Item name="comment" className="flex-1 mb-0">
                           <Input
-                            placeholder="Add a comment..."
+                            placeholder="Add to the discussion..."
                             required
-                            className="px-4 py-2 border-2 border-blue-100 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-900 dark:border-black placeholder:text-gray-200"
+                            className="w-full h-10 px-3 text-sm border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-900 dark:text-white dark:bg-neutral-950 placeholder-neutral-400 focus:outline-none"
                           />
                         </Form.Item>
-                        <Form.Item>
+                        <Form.Item className="mb-0">
                           <Button
                             htmlType="submit"
-                            icon={<FiSend />}
-                            className="px-6 py-5 text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors dark:bg-gray-600 dark:border-none dark:hover:bg-gray-400"
+                            icon={<FiSend className="text-xs" />}
+                            className="h-10 px-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-medium rounded-xl border-none flex items-center justify-center gap-1.5 transition-colors"
                           >
                             Send
                           </Button>
@@ -733,11 +741,12 @@ const Homepage: React.FC = () => {
                 ))}
               </div>
 
+              {/* Dynamic Lazy Load View Trigger Button */}
               {visiblePosts < allQuestions.length && (
-                <div className="text-center mt-8">
+                <div className="text-center mt-10">
                   <Button
                     onClick={loadMorePosts}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors dark:bg-blue-800 dark:hover:bg-blue-700"
+                    className="h-11 px-6 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-900 text-sm font-medium rounded-xl transition-all"
                   >
                     Load More ({allQuestions.length - visiblePosts} remaining)
                   </Button>
